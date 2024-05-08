@@ -4,18 +4,20 @@ from numpy.typing import NDArray
 from gacvm import Domains, ProblemDefinition, Parameters, GeneticAlgorithm
 from gaapp import QSolutionToSolvePanel
 
-from uqtwidgets import QImageViewer, create_scroll_real_value
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
-from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont
+from uqtwidgets import QImageViewer, create_scroll_int_value
+
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
+from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform
 from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF
 
 from __feature__ import snake_case, true_property
 
-class QShapeOptimizerPanel(QSolutionToSolvePanel):
+class QShapeProblemPanel(QSolutionToSolvePanel):
     
     def __init__(self, width : int = 10., height : int = 5., parent : QWidget | None = None) -> None:
         super().__init__(parent)
+        self.display_panel()
         
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
@@ -31,22 +33,41 @@ class QShapeOptimizerPanel(QSolutionToSolvePanel):
     
     
     @property
-    def name(self) -> str:
-        """Retourne le nom du problème."""
-        return 'Shape'
+    def unknown_value(self) -> float:
+        """La valeur recherchée par l'algorithme génétique."""
+        return self._value_scroll_bar.get_real_value()
 
     @property
-    def summary(self) -> str:
-        """Retourne un résumé du problème."""
-        return '''Le problème de la boîte ouverte est un problème d'optimisation bien connu qui consiste à maximiser le volume d'une boiîte pouvant être formée à partir d'une surface rectangulaire.'''
+    def name(self) -> str: # note : override
+        """Nom du problème."""
+        return 'Problème d’optimisation géométrique'
 
     @property
-    def description(self) -> str:
-        """Retourne une description détaillée du problème."""
-        return '''On cherche à obtenir la plus grande boîte sans couvert à partir d'une surface rectangulaire de taille fixe et connue : largeur et hauteur. L'idée consiste à déterminer la taille des coins carrés à découper pour permettre la formation de la boîte en repliant les 4 côtés restants. '''
+    def summary(self) -> str: # note : override
+        """Résumé du problème."""
+        return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
 
-        
-        
+    @property
+    def description(self) -> str: # note : override
+        """Description du problème."""
+        return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
+    
+    def __call__(self, chromosome : NDArray) -> float:
+        pass
+    
+    @property
+    def default_parameters(self) -> Parameters:
+ 
+        #a remplacer
+        engine_parameters = Parameters()
+        engine_parameters.maximum_epoch = 0
+        engine_parameters.population_size =0
+        engine_parameters.elitism_rate = 0
+        engine_parameters.selection_rate = 0
+        engine_parameters.mutation_rate = 0
+        return engine_parameters
+    
+        raise NotImplementedError()
         
         
     def __call__(self, chromosome : NDArray) -> float:
@@ -68,12 +89,40 @@ class QShapeOptimizerPanel(QSolutionToSolvePanel):
         # return aire du polygon
         return 1
     
+    def display_panel(self):
+        
+        
+        centre_layout = QVBoxLayout(self)
+        
+        #param
+        param_group_box = QGroupBox('Parameters')
+        param_layout = QFormLayout(param_group_box)
+
+        self._value_scroll_bar, obstacle_layout = create_scroll_int_value(0,40,100,"")
+
+        shape_selection = QComboBox()
+        
+        shapes = ['Triangle','Square','Star','Pentagon']
+        for i in shapes:
+            shape_selection.add_item(i)
+        #à modifier avce les values du canvas
+        size_label = QLabel('---')
+        param_layout.add_row('Canvas size', size_label)
+        param_layout.add_row('Obstacle count:', obstacle_layout)
+        param_layout.add_row('Shape:', shape_selection)
+        param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        
+        #visualization
+        visualizaion_layout = QVBoxLayout()
+
+        centre_layout.add_widget(param_group_box )
+        centre_layout.add_layout(visualizaion_layout)
+        pass
+    
     @property
     def problem_definition(self) -> ProblemDefinition:
         """Retourne la définition du problème.
-        
-        La définition du problème inclu les domaines des chromosomes et la fonction objective.
-        """
+        La définition du problème inclu les domaines des chromosomes et la fonction objective."""
         domains = Domains(np.array([[0,self.__canvas.width()],[0,self.__canvas.height()],[0,359],[0.1,self.__max_scaling]]),('Translate_x','Translate_y','Rotation','Scaling'))
         return ProblemDefinition(domains, self)
 
@@ -119,3 +168,4 @@ class QShapeOptimizerPanel(QSolutionToSolvePanel):
         # painter.end()
         # self._visualization_widget.image = image
         pass
+
