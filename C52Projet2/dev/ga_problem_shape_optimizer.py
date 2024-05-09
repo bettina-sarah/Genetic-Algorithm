@@ -17,7 +17,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     
     def __init__(self, width : int = 10., height : int = 5., parent : QWidget | None = None) -> None:
         super().__init__(parent)
-        self.display_panel()
+        
         
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
@@ -29,6 +29,8 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
         
+        self.display_panel()
+        self.obstacle_size = 5
         self.__nuage_point = []
     
     
@@ -113,10 +115,14 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         #visualization
-        visualizaion_layout = QVBoxLayout()
-
+        visualization_group_box = QGroupBox('Visualization')
+        visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        visualization_layout = QGridLayout(visualization_group_box)
+        self._visualization_widget = QImageViewer(True)
+        visualization_layout.add_widget(self._visualization_widget)
+        
         centre_layout.add_widget(param_group_box )
-        centre_layout.add_layout(visualizaion_layout)
+        centre_layout.add_widget(visualization_group_box)
         pass
     
     @property
@@ -141,31 +147,30 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         engine_parameters.mutation_rate = 0.25
         return engine_parameters
 
+    def _draw_points(self, painter):
+        painter.set_brush(QColor(100, 200, 100))
+        points = ((100,100),(200,200))
+        painter.draw_rect(100,100,110,110)  
+        pass
+
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
-        # """Met à jour la visualisation de la boîte en fonction de la simulation.
+
+        #Qpainter
+        #crée un image de la grosseur du visualization+box
+        image = QImage(QSize(500, 250), QImage.Format_ARGB32)
+        # image.fill( QColor(255, 255, 255))
+        #image devient parent du painter
+        painter = QPainter(image)
+        painter.set_pen(Qt.NoPen)
+        painter.set_brush(QColor(255, 200, 0))
+        painter.draw_rect(self.__canvas) 
         
-        # Note : Cette fonction est un override!.
-        # """
-        # image = QImage(QSize(self._visualization_widget.width - 1, self._visualization_widget.height - 1), QImage.Format_ARGB32)
-        # image.fill(self._background_color)
-        # painter = QPainter(image)
-        # painter.set_pen(Qt.NoPen)
-
-        # ratio = min(self._visualization_widget.width / self.width, self._visualization_widget.height / self.height) * self._box_visualization_ratio
-        # box_visualization_size = QSizeF(self.width * ratio, self.height * ratio)
-
-        # if ga: # evolving, displaying best solution
-        #     cutout_size = ga.history.best_solution[0]
-        #     cutout_visualization_size = cutout_size * ratio
-
-        #     # self._draw_cut_box_v1(painter, box_visualization_size, cutout_visualization_size)
-        #     self._draw_cut_box_v2(painter, box_visualization_size, cutout_visualization_size)
-
-        # else: # not evolving, meaning configuration is in process! displaying uncut box
-        #     self._draw_uncut_box(painter, box_visualization_size)
-
-
-        # painter.end()
-        # self._visualization_widget.image = image
+               
+        
+        self._visualization_widget.image = image
+        self._box_visualization_ratio = 0.9  
+        self._draw_points(painter)
+        painter.end()
+        
         pass
 
