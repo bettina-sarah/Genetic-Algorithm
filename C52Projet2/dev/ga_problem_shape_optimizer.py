@@ -22,18 +22,19 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
         #pour les tests on cree un carre
-        self.create_square()
+        self.create_hexagon()
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
 
         self.display_panel()
         self.__obstacle_size = 4
 
         self.__rng = np.random.default_rng()
-        self.__point_quantity = 400
+        self.__point_quantity = 40
 
         self.__nuage_point = []
         # a connecter au scroller du GUI
         self.populate_nuage()
+        self.__transformed_shapes = []
 
 
         # # peut-etre remettre un array normal pour le nuage de points
@@ -95,20 +96,22 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         transform.rotate(rotation)
         transform.scale(scaling, scaling)
         polygon_transformed = transform.map(self.__polygon)
-
+        area = 0
         # canvas.contains (polygon.boundingRect) si vrai return point 0
         if not self.__canvas.contains(polygon_transformed.bounding_rect()):
-            return 0
+            return area
         
         
         # polygon.containsPoint(nuage_points[:]) si vrai return point 0
         #range
         for i in range(self.__point_quantity):
             if polygon_transformed.contains_point(self.__nuage_point[i],Qt.OddEvenFill):
-                return 0
+                return area
+        area = process_area(polygon_transformed)
         
+        self.__transformed_shapes.append((polygon_transformed,area))
         # return aire du polygon
-        return process_area(polygon_transformed)
+        return area
     
     def create_square(self):
         self.__polygon.append(QPointF(-1,-1))
@@ -203,20 +206,32 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         return engine_parameters
 
     def _draw_obstacles(self, painter):
+        painter.save()
         painter.set_brush(QColor(138, 223, 43))
         for p in self.__nuage_point:
-            print("*****")
-            print("top x", p.x()-self.__obstacle_size)
-            print("top y", p.y()-self.__obstacle_size)
-            print("top x", p.x())
-            print("top y", p.y())
-            # print("bot x", p.x()+self.__obstacle_size)
-            # print("bot y", p.y()+self.__obstacle_size)
-
             painter.draw_rect(p.x(),
                               p.y(),
                               self.__obstacle_size,
-                              self.__obstacle_size) 
+                              self.__obstacle_size)
+            
+        painter.restore() 
+        pass
+    
+    def _draw_shapes(self, painter):
+        painter.save()
+        painter.set_brush(QColor(255, 0, 255))
+        #sort le tableau
+        self.__transformed_shapes.sort(key=lambda x: x[1])
+        painter.draw_polygon(self.__transformed_shapes[0][0]) 
+        
+        painter.set_brush(Qt.NoBrush)
+        painter.set_pen(QColor(255, 0, 255))
+        for shape in self.__transformed_shapes:
+            painter.draw_polygon(shape[0]) 
+            
+        self.__transformed_shapes.clear()
+        painter.restore()
+        #flush le tableau
         pass
 
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
@@ -236,7 +251,9 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self._visualization_widget.image = image
         self._box_visualization_ratio = 0.9  
         self._draw_obstacles(painter)
-        painter.end()
+        if len(self.__transformed_shapes)>0:
+            self._draw_shapes(painter)
         
+        painter.end()
         pass
 
