@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 from gacvm import Domains, ProblemDefinition, Parameters, GeneticAlgorithm
 from gaapp import QSolutionToSolvePanel
 
-
+from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
@@ -28,10 +28,23 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon.append(QPointF(-1,1))
         
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
-        
+
         self.display_panel()
-        self.obstacle_size = 5
+        self.__obstacle_size = 4
+
+        self.__rng = np.random.default_rng()
+        self.__point_quantity = 40
+
         self.__nuage_point = []
+        # a connecter au scroller du GUI
+        self.populate_nuage()
+
+
+        # # peut-etre remettre un array normal pour le nuage de points
+        # self.__nuage_point = np.empty((20, 2))
+        # # pour les tests...
+        # self.__nuage_point[:,0] = self.__rng.uniform(0,self.__canvas.width())
+        # self.__nuage_point[:,1] = self.__rng.uniform(0,self.__canvas.height())
     
     
     @property
@@ -54,19 +67,18 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         """Description du problème."""
         return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
     
-    def __call__(self, chromosome : NDArray) -> float:
-        pass
+  
     
     @property
     def default_parameters(self) -> Parameters:
  
         #a remplacer
         engine_parameters = Parameters()
-        engine_parameters.maximum_epoch = 0
-        engine_parameters.population_size =0
-        engine_parameters.elitism_rate = 0
-        engine_parameters.selection_rate = 0
-        engine_parameters.mutation_rate = 0
+        engine_parameters.maximum_epoch = 100
+        engine_parameters.population_size = 20
+        engine_parameters.elitism_rate = 0.1
+        engine_parameters.selection_rate = 0.75
+        engine_parameters.mutation_rate = 0.25
         return engine_parameters
     
         raise NotImplementedError()
@@ -83,13 +95,28 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         transform = QTransform()
         # transform prend les translations, rotation, scaling
         #transform sur le Polygon
-        
+        transform.translate(translation_x, translation_y)
+        transform.rotate(rotation)
+        transform.scale(scaling, scaling)
+        polygon_transformed = transform.map(self.__polygon)
+
         # canvas.contains (polygon.boundingRect) si vrai return point 0
+        if not self.__canvas.contains(polygon_transformed.bounding_rect()):
+            return 0.1
+        
         
         # polygon.containsPoint(nuage_points[:]) si vrai return point 0
+        #range
+        for i in range(self.__point_quantity):
+            if polygon_transformed.contains_point(self.__nuage_point[i],Qt.OddEvenFill):
+                return 0.1
         
         # return aire du polygon
-        return 1
+        return process_area(polygon_transformed)
+    
+    def populate_nuage(self):
+        for _ in range(self.__point_quantity):
+            self.__nuage_point.append(QPointF(self.__rng.uniform(0,self.__canvas.width()),self.__rng.uniform(0,self.__canvas.height())))
     
     def display_panel(self):
         
@@ -147,10 +174,21 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         engine_parameters.mutation_rate = 0.25
         return engine_parameters
 
-    def _draw_points(self, painter):
-        painter.set_brush(QColor(100, 200, 100))
-        points = ((100,100),(200,200))
-        painter.draw_rect(100,100,110,110)  
+    def _draw_obstacles(self, painter):
+        painter.set_brush(QColor(138, 223, 43))
+        for p in self.__nuage_point:
+            print("*****")
+            print("top x", p.x()-self.__obstacle_size)
+            print("top y", p.y()-self.__obstacle_size)
+            print("top x", p.x())
+            print("top y", p.y())
+            # print("bot x", p.x()+self.__obstacle_size)
+            # print("bot y", p.y()+self.__obstacle_size)
+
+            painter.draw_rect(p.x(),
+                              p.y(),
+                              self.__obstacle_size,
+                              self.__obstacle_size) 
         pass
 
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
@@ -162,14 +200,14 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         #image devient parent du painter
         painter = QPainter(image)
         painter.set_pen(Qt.NoPen)
-        painter.set_brush(QColor(255, 200, 0))
+        painter.set_brush(QColor(39, 45, 46))
         painter.draw_rect(self.__canvas) 
         
                
         
         self._visualization_widget.image = image
         self._box_visualization_ratio = 0.9  
-        self._draw_points(painter)
+        self._draw_obstacles(painter)
         painter.end()
         
         pass
