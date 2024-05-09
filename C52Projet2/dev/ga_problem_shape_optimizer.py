@@ -219,13 +219,13 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     
     def _draw_shapes(self, painter):
         painter.save()
-        painter.set_brush(QColor(255, 0, 255))
+        painter.set_brush(QColor(100, 0, 255))
         #sort le tableau
         self.__transformed_shapes.sort(key=lambda x: x[1])
         painter.draw_polygon(self.__transformed_shapes[0][0]) 
         
         painter.set_brush(Qt.NoBrush)
-        painter.set_pen(QColor(255, 0, 255))
+        painter.set_pen(QColor(10, 255, 100))
         for shape in self.__transformed_shapes:
             painter.draw_polygon(shape[0]) 
             
