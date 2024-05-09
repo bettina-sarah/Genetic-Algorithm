@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 from gacvm import Domains, ProblemDefinition, Parameters, GeneticAlgorithm
 from gaapp import QSolutionToSolvePanel
 
-
+from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
@@ -28,8 +28,12 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon.append(QPointF(-1,1))
         
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
-        
-        self.__nuage_point = []
+        self.__rng = np.random.default_rng()
+        # peut-etre remettre un array normal pour le nuage de points
+        self.__nuage_point = np.empty((20, 2))
+        # pour les tests...
+        self.__nuage_point[:,0] = self.__rng.uniform(0,self.__canvas.width())
+        self.__nuage_point[:,1] = self.__rng.uniform(0,self.__canvas.height())
     
     
     @property
@@ -52,19 +56,18 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         """Description du problème."""
         return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
     
-    def __call__(self, chromosome : NDArray) -> float:
-        pass
+  
     
     @property
     def default_parameters(self) -> Parameters:
  
         #a remplacer
         engine_parameters = Parameters()
-        engine_parameters.maximum_epoch = 0
-        engine_parameters.population_size =0
-        engine_parameters.elitism_rate = 0
-        engine_parameters.selection_rate = 0
-        engine_parameters.mutation_rate = 0
+        engine_parameters.maximum_epoch = 100
+        engine_parameters.population_size = 20
+        engine_parameters.elitism_rate = 0.1
+        engine_parameters.selection_rate = 0.75
+        engine_parameters.mutation_rate = 0.25
         return engine_parameters
     
         raise NotImplementedError()
@@ -81,13 +84,24 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         transform = QTransform()
         # transform prend les translations, rotation, scaling
         #transform sur le Polygon
-        
+        transform.translate(translation_x, translation_y)
+        transform.rotate(rotation)
+        transform.scale(scaling, scaling)
+        polygon_transformed = transform.map(self.__polygon)
+
         # canvas.contains (polygon.boundingRect) si vrai return point 0
+        if not self.__canvas.contains(polygon_transformed.bounding_rect()):
+            return 0.1
+        
         
         # polygon.containsPoint(nuage_points[:]) si vrai return point 0
+        #range
+        for i in range(20):
+            if polygon_transformed.contains_point(QPointF(self.__nuage_point[i,0], self.__nuage_point[i,1]),Qt.OddEvenFill):
+                return 0.1
         
         # return aire du polygon
-        return 1
+        return process_area(polygon_transformed)
     
     def display_panel(self):
         
