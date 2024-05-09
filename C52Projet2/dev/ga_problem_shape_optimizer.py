@@ -21,19 +21,15 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
-        
-        self.__polygon.append(QPointF(-1,-1))
-        self.__polygon.append(QPointF(1,-1))
-        self.__polygon.append(QPointF(1,1))
-        self.__polygon.append(QPointF(-1,1))
-        
+        #pour les tests on cree un carre
+        self.create_square()
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
 
         self.display_panel()
         self.__obstacle_size = 4
 
         self.__rng = np.random.default_rng()
-        self.__point_quantity = 40
+        self.__point_quantity = 400
 
         self.__nuage_point = []
         # a connecter au scroller du GUI
@@ -102,17 +98,49 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
 
         # canvas.contains (polygon.boundingRect) si vrai return point 0
         if not self.__canvas.contains(polygon_transformed.bounding_rect()):
-            return 0.1
+            return 0
         
         
         # polygon.containsPoint(nuage_points[:]) si vrai return point 0
         #range
         for i in range(self.__point_quantity):
             if polygon_transformed.contains_point(self.__nuage_point[i],Qt.OddEvenFill):
-                return 0.1
+                return 0
         
         # return aire du polygon
         return process_area(polygon_transformed)
+    
+    def create_square(self):
+        self.__polygon.append(QPointF(-1,-1))
+        self.__polygon.append(QPointF(1,-1))
+        self.__polygon.append(QPointF(1,1))
+        self.__polygon.append(QPointF(-1,1))
+
+    def create_triangle(self):
+        self.__polygon.append(QPointF(-1,-1))
+        self.__polygon.append(QPointF(1,-1))
+        self.__polygon.append(QPointF(0,1))
+
+    def create_hexagon(self):
+        self.__polygon.append(QPointF(-1,-0.5))
+        self.__polygon.append(QPointF(-1,0.5))
+        self.__polygon.append(QPointF(-0.5,1))
+        self.__polygon.append(QPointF(0.5,1))
+        self.__polygon.append(QPointF(1,0.5))
+        self.__polygon.append(QPointF(1,-0.5))
+        self.__polygon.append(QPointF(0.5,-1))
+        self.__polygon.append(QPointF(-0.5,-1))
+
+    def create_star(self):
+        self.__polygon.append(QPointF(-1,0))
+        self.__polygon.append(QPointF(-0.25,0.25))
+        self.__polygon.append(QPointF(0,1))
+        self.__polygon.append(QPointF(0.25,0.25))
+        self.__polygon.append(QPointF(1,0))
+        self.__polygon.append(QPointF(0.25,-0.25))
+        self.__polygon.append(QPointF(0,-1))
+        self.__polygon.append(QPointF(-0.25,-0.25))
+        
     
     def populate_nuage(self):
         for _ in range(self.__point_quantity):
