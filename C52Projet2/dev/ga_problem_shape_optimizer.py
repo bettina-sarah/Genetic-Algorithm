@@ -29,11 +29,17 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
         self.__rng = np.random.default_rng()
-        # peut-etre remettre un array normal pour le nuage de points
-        self.__nuage_point = np.empty((20, 2))
-        # pour les tests...
-        self.__nuage_point[:,0] = self.__rng.uniform(0,self.__canvas.width())
-        self.__nuage_point[:,1] = self.__rng.uniform(0,self.__canvas.height())
+        self.__point_quantity = 20
+        self.__nuage_point = []
+        # a connecter au scroller du GUI
+        self.populate_nuage()
+
+
+        # # peut-etre remettre un array normal pour le nuage de points
+        # self.__nuage_point = np.empty((20, 2))
+        # # pour les tests...
+        # self.__nuage_point[:,0] = self.__rng.uniform(0,self.__canvas.width())
+        # self.__nuage_point[:,1] = self.__rng.uniform(0,self.__canvas.height())
     
     
     @property
@@ -96,12 +102,16 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         
         # polygon.containsPoint(nuage_points[:]) si vrai return point 0
         #range
-        for i in range(20):
-            if polygon_transformed.contains_point(QPointF(self.__nuage_point[i,0], self.__nuage_point[i,1]),Qt.OddEvenFill):
+        for i in range(self.__point_quantity):
+            if polygon_transformed.contains_point(self.__nuage_point[i],Qt.OddEvenFill):
                 return 0.1
         
         # return aire du polygon
         return process_area(polygon_transformed)
+    
+    def populate_nuage(self):
+        for _ in range(self.__point_quantity):
+            self.__nuage_point.append(QPointF(self.__rng.uniform(0,self.__canvas.width()),self.__rng.uniform(0,self.__canvas.height())))
     
     def display_panel(self):
         
