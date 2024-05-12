@@ -22,19 +22,21 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
         #pour les tests on cree un carre
-        self.create_hexagon()
+        self.create_star()
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
 
         self.display_panel()
         self.__obstacle_size = 4
 
         self.__rng = np.random.default_rng()
-        self.__point_quantity = 40
+        self.__point_quantity = 70
 
         self.__nuage_point = []
         # a connecter au scroller du GUI
         self.populate_nuage()
-        self.__transformed_shapes = []
+
+        self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
+        self.__areas = np.empty(0, dtype=float)
 
 
         # # peut-etre remettre un array normal pour le nuage de points
@@ -78,9 +80,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         engine_parameters.mutation_rate = 0.25
         return engine_parameters
     
-        raise NotImplementedError()
-        
-        
+  
     def __call__(self, chromosome : NDArray) -> float:
         """Retourne le volume de la boîte obtenue en fonction de la taille de la découpe."""
         
@@ -107,10 +107,12 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         for i in range(self.__point_quantity):
             if polygon_transformed.contains_point(self.__nuage_point[i],Qt.OddEvenFill):
                 return area
+            
         area = process_area(polygon_transformed)
-        
-        self.__transformed_shapes.append((polygon_transformed,area))
-        # return aire du polygon
+
+        self.__shapes = np.vstack([self.__shapes,[polygon_transformed]])
+        self.__areas = np.append(self.__areas, area)
+
         return area
     
     def create_square(self):
@@ -118,11 +120,13 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon.append(QPointF(1,-1))
         self.__polygon.append(QPointF(1,1))
         self.__polygon.append(QPointF(-1,1))
+        self.__shape_points_count = 4
 
     def create_triangle(self):
         self.__polygon.append(QPointF(-1,-1))
         self.__polygon.append(QPointF(1,-1))
         self.__polygon.append(QPointF(0,1))
+        self.__shape_points_count = 3
 
     def create_hexagon(self):
         self.__polygon.append(QPointF(-1,-0.5))
@@ -133,6 +137,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon.append(QPointF(1,-0.5))
         self.__polygon.append(QPointF(0.5,-1))
         self.__polygon.append(QPointF(-0.5,-1))
+        self.__shape_points_count = 8
 
     def create_star(self):
         self.__polygon.append(QPointF(-1,0))
@@ -143,6 +148,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon.append(QPointF(0.25,-0.25))
         self.__polygon.append(QPointF(0,-1))
         self.__polygon.append(QPointF(-0.25,-0.25))
+        self.__shape_points_count = 8
         
     
     def populate_nuage(self):
@@ -220,16 +226,20 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     def _draw_shapes(self, painter):
         painter.save()
         painter.set_brush(QColor(100, 0, 255))
-        #sort le tableau
-        self.__transformed_shapes.sort(key=lambda x: x[1])
-        painter.draw_polygon(self.__transformed_shapes[0][0]) 
-        
+        #sort du plus grand au plus petit
+        indexes = np.argsort(self.__areas, axis=0)[::-1]
+        sorted_shapes = self.__shapes[indexes]
+
+        painter.draw_polygon(QPolygonF(sorted_shapes[0])) 
         painter.set_brush(Qt.NoBrush)
         painter.set_pen(QColor(10, 255, 100))
-        for shape in self.__transformed_shapes:
-            painter.draw_polygon(shape[0]) 
-            
-        self.__transformed_shapes.clear()
+       
+        #numpy me ?
+        for i in range(sorted_shapes.shape[0]):
+            painter.draw_polygon(QPolygonF(sorted_shapes[i]))
+   
+        self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
+        self.__areas = np.empty(0, dtype=float)
         painter.restore()
         #flush le tableau
         pass
@@ -251,7 +261,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self._visualization_widget.image = image
         self._box_visualization_ratio = 0.9  
         self._draw_obstacles(painter)
-        if len(self.__transformed_shapes)>0:
+        if np.size(self.__areas)>0:
             self._draw_shapes(painter)
         
         painter.end()
