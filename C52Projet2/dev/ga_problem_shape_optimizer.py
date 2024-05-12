@@ -256,8 +256,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         painter.set_brush(QColor(39, 45, 46))
         painter.draw_rect(self.__canvas) 
         
-               
-        
         self._visualization_widget.image = image
         self._box_visualization_ratio = 0.9  
         self._draw_obstacles(painter)
