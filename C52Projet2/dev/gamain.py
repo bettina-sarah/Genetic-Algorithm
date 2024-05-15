@@ -10,6 +10,7 @@ from ga_problem_unknown_number import QUnknownNumberProblemPanel
 from ga_problem_open_box import QOpenBoxProblemPanel
 
 from ga_problem_shape_optimizer import QShapeProblemPanel
+from ga_problem_yeux_bleu import QEyeProblemPanel
 
 
 from PySide6.QtWidgets import QApplication
@@ -42,6 +43,7 @@ def main():
     ga_app.add_solution_panel(QUnknownNumberProblemPanel(-1000.0, 0.0, 1000.0))     # note : on passe une instance, pas une classe
     ga_app.add_solution_panel(QOpenBoxProblemPanel())                               # note : on passe une instance, pas une classe
     ga_app.add_solution_panel(QShapeProblemPanel()) 
+    ga_app.add_solution_panel(QEyeProblemPanel()) 
     # ...
     # ga_app.add_solution_panel(...)
 
