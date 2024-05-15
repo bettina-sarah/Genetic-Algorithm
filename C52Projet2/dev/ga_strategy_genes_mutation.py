@@ -3,7 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 import random
 
-from gacvm import MutationStrategy, Domains
+from gacvm import MutationStrategy, Domains, GeneMutationStrategy
 
 
 class GenesMutationStrategy(MutationStrategy):
@@ -27,6 +27,29 @@ class GenesMutationStrategy(MutationStrategy):
 
 
         # return self._scale_normalized(self._rng.random(self._ranges.shape[0]))
+        
+class GenesMutationStrategyWithoutScaling(MutationStrategy):
+    """Stratégie de mutation qui mute tous les gènes d'un individu à la fois.
+    
+    La mutation est effectuée sur chaque gène d'un individu avec la probabilité donnée.
+    """
+    
+    def __init__(self) -> None:
+        super().__init__('Mutate All Genes')
+
+    def mutate(self, offsprings : NDArray, mutation_rate : float, domains : Domains) -> None:
+        def do_mutation(offspring, mutation_rate, domains):
+            if self._rng.random() <= mutation_rate:
+                #a = domains.random_values()[-1]
+                #b = a - domains.ranges[-1]
+                #c = b * 0.05
+                #offspring[-1] = offspring[-1] + (c[-1]*5)
+                offspring[:-1] = domains.random_values()[:-1]
+                
+        
+        np.apply_along_axis(do_mutation, 1, offsprings, mutation_rate, domains)
+
+
 
 class MixedGenesMutationStrategy(MutationStrategy):
     """Stratégie de mutation qui mute, selon
@@ -41,19 +64,48 @@ class MixedGenesMutationStrategy(MutationStrategy):
             if self._rng.random() <= mutation_rate:
                 a = domains.random_values() # 666  # 0.03
                 b = a - domains.ranges[:,0] # prend le minimum de ton range # 166 (666 - 500) # 0.2 - 10 = 9.8
-                c = b * 0.02 # la nouvelle valeur dans le comrpessed range
+                c = b * 0.05 # la nouvelle valeur dans le comrpessed range
                 # compressed_values = (a.ranges_span) * 0.01 
                 # offspring[:] = domains.random_values()
                 # print(offspring)
                 positive = random.random() >= 0.5
                 if positive:
-                    offspring[:] = offspring + c
+                    offspring[:-2] = offspring[:-2] + c[:-2]
+                    offspring[-2] = offspring[-2] + (c[-2]*5)
+                    offspring[-1] = offspring[-1] + (c[-1]*5)
+                     
                 else:
-                    offspring[:] = abs(offspring - c)
-                # print(offspring)
+                    offspring[:-2] = offspring[:-2] - c[:-2]
+                    offspring[-2] = offspring[-2] - (c[-2]*5)
+                    offspring[-1] = offspring[-1] - (c[-1])
+                
+                   
+               
         
         np.apply_along_axis(do_mutation, 1, offsprings, mutation_rate, domains) 
        
+       
+class SuperMixedGenesMutationStrategy(MutationStrategy):
+    """Stratégie de mutation qui mute, selon
+    """
+    
+    
+    def __init__(self) -> None:
+        super().__init__('Super Duper Mutate All Genes But Add a LOT of Spice')
+        self.__mutation1 = GeneMutationStrategy() # 2%
+        self.__mutation2 = GenesMutationStrategyWithoutScaling() # 8%
+        self.__mutation3 = MixedGenesMutationStrategy() #89%
+
+    def mutate(self, offsprings : NDArray, mutation_rate : float, domains : Domains) -> None:
+       rng = np.random.default_rng()
+       chiffre = rng.random()
+       if chiffre <= 0.02:
+           self.__mutation1.mutate(offsprings, mutation_rate, domains)
+           
+       elif chiffre <= 0.20:
+           self.__mutation2.mutate(offsprings, mutation_rate, domains)
+       else:
+           self.__mutation3.mutate(offsprings, mutation_rate, domains)
 
 # if __name__ == "__main__":
 #     strat = MixedGenesMutationStrategy()

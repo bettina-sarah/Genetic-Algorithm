@@ -4,7 +4,7 @@ import sys
 
 from gaapp import QGAApp
 
-from ga_strategy_genes_mutation import GenesMutationStrategy, MixedGenesMutationStrategy
+from ga_strategy_genes_mutation import GenesMutationStrategy, MixedGenesMutationStrategy, SuperMixedGenesMutationStrategy, GenesMutationStrategyWithoutScaling
 from gacvm import GeneMutationStrategy
 from ga_problem_unknown_number import QUnknownNumberProblemPanel
 from ga_problem_open_box import QOpenBoxProblemPanel
@@ -31,8 +31,10 @@ def main():
     # -----------------------------------------------
     # ga_app.add_selection_strategy(...)
     # ga_app.add_crossover_strategy(...)
-    ga_app.add_mutation_strategy(GenesMutationStrategy)                             # note : on passe une classe, pas une instance
-    ga_app.add_mutation_strategy(MixedGenesMutationStrategy)      
+    ga_app.add_mutation_strategy(GenesMutationStrategy)
+    ga_app.add_mutation_strategy(GenesMutationStrategyWithoutScaling)     # note : on passe une classe, pas une instance
+    ga_app.add_mutation_strategy(MixedGenesMutationStrategy)
+    ga_app.add_mutation_strategy(SuperMixedGenesMutationStrategy)         
 
     # Exemple d'ajout de panneau de résolution de problème
     # -----------------------------------------------
