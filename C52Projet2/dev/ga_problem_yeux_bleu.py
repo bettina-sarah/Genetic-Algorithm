@@ -21,13 +21,13 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         super().__init__(parent)
         self.display_panel()
     
-        self.__population = 100
+        self.__population = 10000
         self.__taux_croissance = 10
-        self.__annee = 5
+        self.__annee = 25
 
-        self.__population_brun = 0.7
-        self.__population_combo = 0.1
-        self.__population_bleu = 0.2
+        self.__population_brun = 0.34
+        self.__population_combo = 0.33
+        self.__population_bleu = 0.33
         
         
         # self.__probabilites_procreation = np.array([[0, 0, 1, 0.25, 0.5, 0],
@@ -156,49 +156,18 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             pop_yeux = pop_final
             
            
-        pourcentage_finale = pop_yeux[2]/pop_gen   
-        score = 1 - abs(pourcentage_finale-0.50)
+        # pourcentage_finale = pop_yeux[2]/pop_gen   
+        # score = 1 - abs(pourcentage_finale-0.50)
+        pourcentage_bleu = pop_yeux[2]/pop_gen  
+        pourcentage_brun = pop_yeux[0]/pop_gen
+        pourcentage_combo = pop_yeux[1]/pop_gen
+        
+        # NOTES: slider pour user pour changer le score (33%-33%-33% ou 50%-50% ou etc ... )
+        # taux de croissance manque
+        
+        score = ((pourcentage_bleu-0.33)**2 + (pourcentage_brun - 0.33)**2 + (pourcentage_combo-0.33)**2)**0.5
+        score = 1 - score
         return score
-
-  
-  
-    # def __call__(self, chromosome : NDArray) -> float:
-    #     """Retourne le volume de la boîte obtenue en fonction de la taille de la découpe."""
-        
-    #     brun = chromosome[0]
-    #     bleu = chromosome[1]
-        
-    #     pop_brun = math.floor(self.__population * brun)
-    #     pop_bleu = math.ceil(self.__population * bleu)
-        
-    #     pop_combo = self.__population - (pop_brun + pop_bleu)
-        
-    #     pop_yeux = np.array([pop_brun,pop_combo,pop_bleu])
-    #     pop_gen = self.__population
-    #     for _ in range(self.__annee):
-    #         couples = np.zeros((5),dtype=int)
-    #         #trouve tous les couples
-    #         couples[0],couples[1] = self.match_bleu(pop_yeux)
-    #         couples[4] = self.match_brun(pop_yeux)
-    #         couples[2] = self.match_couple_final(pop_yeux, 0)
-    #         couples[3] = self.match_couple_final(pop_yeux, 1)
-    #         # ajoute les couples avec le taux de croissance
-    #         couples = couples + self.croissance_couples()
-    #         # trouve la nouvelle distribution de population
-    #         pop_final = (couples  * self.__probabilites_procreation)*2
-    #         pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
-    #         # update le nombre total de population
-    #         pop_gen = np.sum(couples)*2
-    #         # ajouter le surplus au combo_brun (un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int)
-    #         reste = pop_gen - np.sum(pop_final)
-    #         pop_final[1] += reste
-    #         pop_yeux = pop_final
-            
-           
-    #     pourcentage_finale = pop_yeux[2]/pop_gen   
-    #     score = 1 - abs(pourcentage_finale-0.50)
-    #     print("score: ",score, " avec ", pourcentage_finale*100, "domaine bleu:",bleu, "brun:",brun)
-    #     return score
     
     
     def match_bleu(self,pop_yeux):
