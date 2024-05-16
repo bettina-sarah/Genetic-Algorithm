@@ -12,6 +12,7 @@ from uqtwidgets import QImageViewer, create_scroll_int_value
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
 from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform
 from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF
+from PySide6.QtCharts import QChart, QChartView, QBarSeries, QBarSet, QBarCategoryAxis
 
 from __feature__ import snake_case, true_property
 
@@ -19,9 +20,12 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     
     def __init__(self, width : int = 10., height : int = 5., parent : QWidget | None = None) -> None:
         super().__init__(parent)
-        self.display_panel()
     
-        self.__population = 10000
+
+        self.__chart_view = QChartView()
+        self.display_panel()
+        
+        self.__population = 1000
         self.__taux_croissance = 10
         self.__annee = 25
 
@@ -30,17 +34,20 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__population_bleu = 0.33
         
         
-        # self.__probabilites_procreation = np.array([[0, 0, 1, 0.25, 0.5, 0],
-        #                                             [0, 0.5, 0, 0.5, 0.5, 1],
-        #                                             [1, 0.5, 0, 0.25, 0, 0]],dtype=np.float32)
-        
-        
         self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
                                                     [0, 0.5, 0, 0.5, 1, 0.5],
                                                     [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
         
         
         # ajouté: brun + bleu = 100% combo; 0% brun et 0% bleu
+        self.__pop_bleu = 30
+        self.__pop_brun = 30
+        self.__pop_combo = 30
+        
+        
+        self.__results = np.empty((0,3),dtype=np.float32)
+        self.__scores = np.empty(0,dtype=np.float32)
+        
         print(" ")
 
     
@@ -52,12 +59,12 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     @property
     def name(self) -> str: # note : override
         """Nom du problème."""
-        return 'Problème d’optimisation géométrique'
+        return 'Problème d’optimisation de pureté de couple de population'
 
     @property
     def summary(self) -> str: # note : override
         """Résumé du problème."""
-        return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
+        return '''On cherche à trouver la balance parfaite  permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
 
     @property
     def description(self) -> str: # note : override
@@ -75,9 +82,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         #chromosome = np.array([0.3,0.5,0.8])
         #conversion % choisis par le user en nbr int de personnes en fonc de population
         
-        pop_brun = self.__population * self.__population_brun
-        pop_combo = self.__population * self.__population_combo
-        pop_bleu = self.__population * self.__population_bleu
+        pop_brun = self.__pop_brun
+        pop_combo = self.__pop_combo
+        pop_bleu = self.__pop_bleu
         
         pop_gen = self.__population
         for _ in range(self.__annee):
@@ -156,6 +163,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             pop_yeux = pop_final
             
            
+
         # pourcentage_finale = pop_yeux[2]/pop_gen   
         # score = 1 - abs(pourcentage_finale-0.50)
         pourcentage_bleu = pop_yeux[2]/pop_gen  
@@ -164,9 +172,12 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         # NOTES: slider pour user pour changer le score (33%-33%-33% ou 50%-50% ou etc ... )
         # taux de croissance manque
-        
         score = ((pourcentage_bleu-0.33)**2 + (pourcentage_brun - 0.33)**2 + (pourcentage_combo-0.33)**2)**0.5
         score = 1 - score
+
+        self.__results = np.vstack((self.__results, pop_yeux))
+        self.__scores = np.append(self.__scores, score)
+
         return score
     
     
@@ -235,8 +246,70 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         pass
     
     def display_panel(self):
+        
         centre_layout = QVBoxLayout(self)
+        
+        #param
+        param_group_box = QGroupBox('Parameters')
+        param_layout = QFormLayout(param_group_box)
+
+        self._value_pop_bleu_sb, pop_bleu_layout = create_scroll_int_value(0,34,100,"")
+        self._value_pop_brun_sb, pop_brun_layout = create_scroll_int_value(0,33,100,"")
+        self._value_pop_combo_sb, pop_combo_layout = create_scroll_int_value(0,33,100,"")
+        
+        self._value_pop_bleu_sb.valueChanged.connect(self.update_purete_bleu)
+        self._value_pop_brun_sb.valueChanged.connect(self.update_purete_brun)
+        self._value_pop_combo_sb.valueChanged.connect(self.update_purete_combo)
+
+        #à modifier avce les values du canvas
+        param_layout.add_row('Population bleu:', pop_bleu_layout)
+        param_layout.add_row('Population brun:', pop_brun_layout)
+        param_layout.add_row('Population combo:', pop_combo_layout)
+        param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        
+        #visualization
+        visualization_group_box = QGroupBox('Visualization')
+        visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self._visualization_layout = QGridLayout(visualization_group_box)
+        
+        # chartView.set_render_hint(QPainter.Antialiasing)
+        self._visualization_layout.add_widget(self.__chart_view)
+        
+        centre_layout.add_widget(param_group_box)
+        centre_layout.add_widget(visualization_group_box)
         pass
+    
+    @Slot()
+    def update_purete_bleu(self):
+        self.__pop_bleu = self._value_pop_bleu_sb.value
+        total = self._value_pop_bleu_sb.value + self._value_pop_brun_sb.value + self._value_pop_combo_sb.value
+        if total != 100:
+            diff = total - 100
+            self._value_pop_brun_sb.value= (self._value_pop_brun_sb.value - diff / 2)
+            self.__pop_brun = (self._value_pop_brun_sb.value - diff / 2)
+            self._value_pop_combo_sb.value = (self._value_pop_combo_sb.value - diff / 2)
+            self.__pop_combo = (self._value_pop_combo_sb.value - diff / 2)
+        
+    @Slot()
+    def update_purete_brun(self):
+        self.__pop_brun = self._value_pop_brun_sb.value
+        total = self._value_pop_bleu_sb.value + self._value_pop_brun_sb.value + self._value_pop_combo_sb.value
+        if total != 100:
+            diff = total - 100
+            self._value_pop_combo_sb.value = (self._value_pop_combo_sb.value - diff / 2)
+            self.__pop_combo = (self._value_pop_combo_sb.value - diff / 2)
+            self._value_pop_bleu_sb.value= (self._value_pop_bleu_sb.value - diff / 2)
+            self.__pop_bleu = (self._value_pop_bleu_sb.value - diff / 2)
+    @Slot()
+    def update_purete_combo(self):
+        self.__pop_combo = self._value_pop_combo_sb.value
+        total = self._value_pop_bleu_sb.value + self._value_pop_brun_sb.value + self._value_pop_combo_sb.value
+        if total != 100:
+            diff = total - 100
+            self._value_pop_brun_sb.value= (self._value_pop_brun_sb.value - diff / 2)
+            self.__pop_brun = (self._value_pop_brun_sb.value - diff / 2)
+            self._value_pop_bleu_sb.value= (self._value_pop_bleu_sb.value - diff / 2)
+            self.__pop_bleu = (self._value_pop_bleu_sb.value - diff / 2)
     
     @property
     def problem_definition(self) -> ProblemDefinition:
@@ -260,9 +333,48 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         engine_parameters.mutation_rate = 0.25
         return engine_parameters
 
+    def _draw_charts(self):
+        indexes = np.argsort(self.__scores, axis=0)[::-1]
+        sorted_results = self.__results[indexes]
+        
+        # Data
+        series = QBarSeries()
+        categories = ["Best"]
+        
+        for i in range(len(sorted_results)):
+            set = QBarSet("PopBrun")
+            set << int(sorted_results[i,0])  
+            set1 = QBarSet("PopCombo") 
+            set1 << int(sorted_results[i,1])
+            set2 = QBarSet("PopCombo")
+            set2 << int(sorted_results[i,2])
+            categories.append(str(i))
 
+        series.append(set)
+        series.append(set1)
+        series.append(set2)
+        # Chart
+        chart = QChart()
+        chart.add_series(series)
+        chart.title = "Stacked Bar Chart Example"
+
+        # X-axis
+        axisX = QBarCategoryAxis()
+        axisX.append(categories)
+        chart.add_axis(axisX, Qt.AlignBottom)
+        series.attach_axis(axisX)
+
+        # Y-axis
+        chart.create_default_axes()
+        axis_y = chart.axes(Qt.Vertical)[0]
+        chart.add_axis(axis_y, Qt.AlignLeft)
+
+        # Chart view
+        self.__chart_view.set_chart(chart)
+        
 
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
-
+        # if np.size(self.__results)>0:
+        #     self._draw_charts()
         pass
 

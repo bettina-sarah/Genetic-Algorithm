@@ -7,13 +7,15 @@ from gaapp import QSolutionToSolvePanel
 from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy, QPushButton
 from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform
-from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF
+from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF, Signal
 
 from __feature__ import snake_case, true_property
 
 class QShapeProblemPanel(QSolutionToSolvePanel):
+    
+    obstacle_count_changed = Signal(int)
     
     def __init__(self, width : int = 10., height : int = 5., parent : QWidget | None = None) -> None:
         super().__init__(parent)
@@ -22,7 +24,8 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
         #pour les tests on cree un carre
-        self.create_star()
+        # self.create_triangle()
+
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
 
         self.display_panel()
@@ -35,8 +38,18 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         # a connecter au scroller du GUI
         self.populate_nuage()
 
-        self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
+        
         self.__areas = np.empty(0, dtype=float)
+        
+        self.shape_map = {
+        "Triangle":self.create_triangle,
+        "Square":self.create_square,
+        "Star":self.create_star,
+        "Hexagon":self.create_hexagon
+        }
+        
+        self.shape_map[self.shape_selection.current_text]()
+        self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
 
 
         # # peut-etre remettre un array normal pour le nuage de points
@@ -116,6 +129,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         return area
     
     def create_square(self):
+        self.__polygon.clear()
         self.__polygon.append(QPointF(-1,-1))
         self.__polygon.append(QPointF(1,-1))
         self.__polygon.append(QPointF(1,1))
@@ -123,12 +137,14 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__shape_points_count = 4
 
     def create_triangle(self):
+        self.__polygon.clear()
         self.__polygon.append(QPointF(-1,-1))
         self.__polygon.append(QPointF(1,-1))
         self.__polygon.append(QPointF(0,1))
         self.__shape_points_count = 3
 
     def create_hexagon(self):
+        self.__polygon.clear()
         self.__polygon.append(QPointF(-1,-0.5))
         self.__polygon.append(QPointF(-1,0.5))
         self.__polygon.append(QPointF(-0.5,1))
@@ -140,6 +156,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__shape_points_count = 8
 
     def create_star(self):
+        self.__polygon.clear()
         self.__polygon.append(QPointF(-1,0))
         self.__polygon.append(QPointF(-0.25,0.25))
         self.__polygon.append(QPointF(0,1))
@@ -150,6 +167,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon.append(QPointF(-0.25,-0.25))
         self.__shape_points_count = 8
         
+
     
     def populate_nuage(self):
         for _ in range(self.__point_quantity):
@@ -165,17 +183,26 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         param_layout = QFormLayout(param_group_box)
 
         self._value_scroll_bar, obstacle_layout = create_scroll_int_value(0,40,100,"")
-
-        shape_selection = QComboBox()
+        self._regenerate_button = QPushButton('Regenerate')
+        self._regenerate_button.set_fixed_width(80)
+        obstacle_layout.add_widget(self._regenerate_button)
         
-        shapes = ['Triangle','Square','Star','Pentagon']
+        self._value_scroll_bar.valueChanged.connect(self.update_point_quantity)
+        self._regenerate_button.pressed.connect(self.update_nuage)
+
+        # privé 
+        self.shape_selection = QComboBox()
+        
+        shapes = ['Triangle','Square','Star','Hexagon']
         for i in shapes:
-            shape_selection.add_item(i)
+            self.shape_selection.add_item(i)
+            
+        self.shape_selection.currentTextChanged.connect(self.choose_shape)
         #à modifier avce les values du canvas
-        size_label = QLabel('---')
+        size_label = QLabel(str(int(self.__canvas.width())) + ' x ' + str(int(self.__canvas.height()))) 
         param_layout.add_row('Canvas size', size_label)
         param_layout.add_row('Obstacle count:', obstacle_layout)
-        param_layout.add_row('Shape:', shape_selection)
+        param_layout.add_row('Shape:', self.shape_selection)
         param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         #visualization
@@ -188,6 +215,46 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         centre_layout.add_widget(param_group_box )
         centre_layout.add_widget(visualization_group_box)
         pass
+    
+    @Slot()
+    def update_point_quantity(self):
+        self.__point_quantity = self._value_scroll_bar.value
+        self.__nuage_point.clear()
+        self.populate_nuage()
+        
+        self._draw_obstacles(self.painter_prepare_obstacles())
+        
+        
+    @Slot()
+    def update_nuage(self):
+        self.__nuage_point.clear()
+        self.populate_nuage()
+        self._draw_obstacles(self.painter_prepare_obstacles())
+        
+    @Slot()
+    def choose_shape(self):
+        shape = str(self.shape_selection.current_text)
+        self.shape_map[shape]()
+        self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
+        
+        print("choose shape !")
+        
+    def painter_prepare_obstacles(self):
+        image = QImage(QSize(500, 250), QImage.Format_ARGB32)
+        
+        painter = QPainter(image)
+        painter.set_pen(Qt.NoPen)
+        painter.set_brush(QColor(39, 45, 46))
+        painter.draw_rect(self.__canvas) 
+        
+        self._visualization_widget.image = image
+        self._box_visualization_ratio = 0.9
+        return painter
+        
+    
+        
+        
+        
     
     @property
     def problem_definition(self) -> ProblemDefinition:
