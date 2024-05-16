@@ -152,9 +152,10 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
                 valeur_binaire = ''.join(map(str, reste))
                 decimal_number = int(valeur_binaire, 2)
                 
-                index_lookup = np.where(self.__lookup_table_reste[0] == decimal_number)[0]
+                # np where retourne tuple avec array: [index ou la comparaison est vraie, type de variable]
+                index_lookup = np.where(self.__lookup_table_reste[0] == decimal_number)[0][0]
                 
-                index_combo = self.__lookup_table_reste[1, index_lookup[0]]
+                index_combo = self.__lookup_table_reste[1, index_lookup]
                 couples_finales[index_combo] = couples_finales[index_combo] + 1 
             # ---------------------------------------------
             # ajoute les couples avec le taux de croissance
