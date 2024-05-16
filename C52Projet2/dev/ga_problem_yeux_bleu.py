@@ -82,9 +82,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         #chromosome = np.array([0.3,0.5,0.8])
         #conversion % choisis par le user en nbr int de personnes en fonc de population
         
-        pop_brun = self.__pop_brun
-        pop_combo = self.__pop_combo
-        pop_bleu = self.__pop_bleu
+        pop_brun = self.__population * (self.__pop_brun/100) 
+        pop_combo = self.__population * (self.__pop_combo/100) 
+        pop_bleu = self.__population * (self.__pop_bleu/100) 
         
         pop_gen = self.__population
         for _ in range(self.__annee):
