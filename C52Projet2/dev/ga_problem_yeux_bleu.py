@@ -148,12 +148,13 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             # index_reste = np.sum(np.arange(3)[reste > 0])
             # couples_finales[-index_reste] = couples_finales[-index_reste] + 1 
             # --------------------------------------------------------------
+            reste = [1,1,0]
             if np.sum(reste) > 0:
-                valeur_binaire = ''.join(map(str, reste))
-                decimal_number = int(valeur_binaire, 2)
-                
+                # convertie l'array reste(un array binaire) en sa valeur decimal
+                decimal_number = np.packbits(np.flip(reste), bitorder='little')
+            
                 # np where retourne tuple avec array: [index ou la comparaison est vraie, type de variable]
-                index_lookup = np.where(self.__lookup_table_reste[0] == decimal_number)[0][0]
+                index_lookup = np.where(self.__lookup_table_reste[0] == decimal_number[0])[0][0]
                 
                 index_combo = self.__lookup_table_reste[1, index_lookup]
                 couples_finales[index_combo] = couples_finales[index_combo] + 1 
