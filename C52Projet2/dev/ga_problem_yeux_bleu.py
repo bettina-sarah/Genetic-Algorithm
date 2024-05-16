@@ -148,7 +148,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             # index_reste = np.sum(np.arange(3)[reste > 0])
             # couples_finales[-index_reste] = couples_finales[-index_reste] + 1 
             # --------------------------------------------------------------
-            reste = [1,1,0]
             if np.sum(reste) > 0:
                 # convertie l'array reste(un array binaire) en sa valeur decimal
                 decimal_number = np.packbits(np.flip(reste), bitorder='little')
