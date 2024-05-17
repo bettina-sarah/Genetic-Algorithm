@@ -29,9 +29,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__taux_croissance = 10
         self.__annee = 20
 
-        self.__population_brun = 0.80
-        self.__population_combo = 0.10
-        self.__population_bleu = 0.10
+        self.__population_brun = 0.85
+        self.__population_combo = 0.07
+        self.__population_bleu = 0.08
         
         # self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
         #                                             [0, 2, 0, 2, 4, 2],
