@@ -33,7 +33,10 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__population_combo = 0.31
         self.__population_bleu = 0.31
         
-        
+        # self.__probabilites_procreation = np.array([[8, 2, 0, 0, 0, 4],
+        #                                             [0, 4, 0, 4, 8, 4],
+        #                                             [0, 2, 8, 4, 0, 0 ]],dtype=np.float32)
+                
         self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
                                                     [0, 0.5, 0, 0.5, 1, 0.5],
                                                     [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
