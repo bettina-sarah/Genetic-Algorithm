@@ -27,15 +27,15 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         self.__population = 100
         self.__taux_croissance = 10
-        self.__annee = 25
+        self.__annee = 20
 
-        self.__population_brun = 0.38
-        self.__population_combo = 0.31
-        self.__population_bleu = 0.31
+        self.__population_brun = 0.80
+        self.__population_combo = 0.10
+        self.__population_bleu = 0.10
         
-        # self.__probabilites_procreation = np.array([[8, 2, 0, 0, 0, 4],
-        #                                             [0, 4, 0, 4, 8, 4],
-        #                                             [0, 2, 8, 4, 0, 0 ]],dtype=np.float32)
+        # self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
+        #                                             [0, 2, 0, 2, 4, 2],
+        #                                             [0, 1, 4, 2, 0, 0 ]],dtype=np.float32)
                 
         self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
                                                     [0, 0.5, 0, 0.5, 1, 0.5],
@@ -84,7 +84,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         # purete_combo = chromosome[1]
         # purete_bleu = chromosome[2]
         
-        chromosome = np.array([0.3,0.5,0.8])
+        # chromosome = np.array([0.3,0.5,0.8])
         #conversion % choisis par le user en nbr int de personnes en fonc de population
         
         pop_brun = self.__population * self.__population_brun
@@ -92,9 +92,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         pop_bleu = self.__population * self.__population_bleu
         
         pop_gen = self.__population
+        pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
         for _ in range(self.__annee):
-            pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
-            
+            # pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
             couples_finales = np.zeros(6, dtype=np.uint8)
             
             #retirer les impaires
@@ -168,11 +168,17 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             pop_final = (couples_finales  * self.__probabilites_procreation)*2
             pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
             # update le nombre total de population
-            pop_gen = np.sum(couples_finales)*2
-            # ajouter le surplus au combo_brun (un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int)
-            reste = pop_gen - np.sum(pop_final)
+        
+            # pop_gen = np.sum(pop_final)
+            # pop_gen = np.sum(couples_finales)*2
+            #ajouter le surplus au combo_brun (un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int)
+            accouple = np.sum(pop_final)
+            reste = pop_gen - accouple
             pop_final[1] += reste # ajouter reste au combo
             pop_yeux = pop_final
+            pop_gen = np.sum(pop_final)
+            
+            # test
             
            
 
@@ -189,7 +195,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
         self.__results = np.vstack((self.__results, pop_yeux))
         self.__scores = np.append(self.__scores, score)
-
+        print("pop_gen: ",pop_gen," / brun: ", pourcentage_brun," combo: ",pourcentage_combo," bleu: ",pourcentage_bleu, " score: ",score)
         return score
     
     
