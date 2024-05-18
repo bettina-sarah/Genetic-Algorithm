@@ -193,7 +193,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         score = ((pourcentage_bleu-0.33)**2 + (pourcentage_brun - 0.33)**2 + (pourcentage_combo-0.33)**2)**0.5
         score = 1 - score
 
-        self.__results = np.vstack((self.__results, pop_yeux))
+
+        
+        self.__results = np.vstack((self.__results, chromosome))
         self.__scores = np.append(self.__scores, score)
         print("---")
         print("brun: ","%7.0f" % self.__population_brun,"| combo","%7.0f" % self.__population_combo,"| bleu","%7.0f" % self.__population_bleu, "| pop_gen:","%7.0f" %pop_gen)
@@ -283,7 +285,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         engine_parameters.mutation_rate = 0.25
         return engine_parameters
 
-    def _draw_chart(self,painter,solution,position):
+    def _draw_chart(self,painter,solution,position, index):
         x,y,width,height = position
         painter.save()
         painter.set_brush(QColor(0,0,0))
@@ -295,9 +297,16 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         for i in range(3):
             painter.set_brush(self.__colors[i])
-            inner_rect = QRectF(outer_rect.left() + i * inner_width, outer_rect.top(), inner_width, inner_height * (solution[i]/100))
+            inner_rect = QRectF(outer_rect.left() + i * inner_width, outer_rect.top(), inner_width, inner_height * (solution[i]))
             painter.draw_rect(inner_rect)
         
+        if index == 0:
+            yellow_pen = QPen(QColor(255, 255, 0)) 
+            yellow_pen.set_width(10)  
+            painter.set_brush(Qt.NoBrush)
+            painter.set_pen(yellow_pen)
+            painter.draw_rect(outer_rect)
+
         painter.restore()
         pass
         
@@ -343,10 +352,10 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             
             row = i // cols
             col = i % cols
-            self._draw_chart(painter,sorted_results[i],(0 + col * squareWidth,
-                                                        0 + row * squareHeight,
+            self._draw_chart(painter,sorted_results[i],(col * squareWidth,
+                                                        row * squareHeight,
                                                         squareWidth,
-                                                        squareHeight))
+                                                        squareHeight), i)
         
         self.__results = np.empty((0,3),dtype=np.float32)
         self.__scores = np.empty(0,dtype=np.float32)
@@ -354,9 +363,11 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         painter.restore()
         pass
 
+
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
-        size =  QSize(1500,500)
+        size =  QSize(1500,1500)
         image = QImage(size, QImage.Format_ARGB32)
+        image.fill(Qt.white)
         painter = QPainter(image)
         painter.set_pen(Qt.NoPen)
         painter.set_brush(QColor(255, 255, 255))
@@ -370,3 +381,4 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             self._draw_charts_grid(painter,size)
             
         painter.end()
+        
