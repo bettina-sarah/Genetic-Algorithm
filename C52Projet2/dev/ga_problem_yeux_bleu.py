@@ -24,6 +24,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__chart_view = QChartView()
         self.display_panel()
         
+        self.__canvas = QRectF(0,0,1500,500)
+        
         self.__population = 1000
         self.__taux_croissance = 10
         self.__preference = 1
@@ -33,6 +35,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__pop_brun = 30
         self.__pop_combo = 30
         
+        self.__colors = (QColor(0,0,255),
+                         QColor(245,213,162),
+                         QColor(165,42,42))
         
         self.__results = np.empty((0,3),dtype=np.float32)
         self.__scores = np.empty(0,dtype=np.float32)
@@ -196,8 +201,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self._visualization_layout = QGridLayout(visualization_group_box)
         
-        # chartView.set_render_hint(QPainter.Antialiasing)
-        self._visualization_layout.add_widget(self.__chart_view)
+        self._visualization_widget = QImageViewer(True)
+        self._visualization_layout.add_widget(self._visualization_widget)
         
         centre_layout.add_widget(param_group_box)
         centre_layout.add_widget(visualization_group_box)
@@ -257,48 +262,88 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         engine_parameters.mutation_rate = 0.25
         return engine_parameters
 
-    def _draw_charts(self):
+    def _draw_chart(self,painter,solution,position):
+        x,y,width,height = position
+        painter.save()
+        painter.set_brush(QColor(0,0,0))
+        outer_rect = QRectF(x,y,width,height)
+        painter.draw_rect(outer_rect)
+        
+        inner_width = outer_rect.width() / 3
+        inner_height = outer_rect.height()
+        
+        for i in range(3):
+            painter.set_brush(self.__colors[i])
+            inner_rect = QRectF(outer_rect.left() + i * inner_width, outer_rect.top(), inner_width, inner_height * (solution[i]/100))
+            painter.draw_rect(inner_rect)
+        
+        painter.restore()
+        pass
+        
+        
+        
+        
+    def _draw_charts_grid(self,painter,size):
+        painter.save()
         indexes = np.argsort(self.__scores, axis=0)[::-1]
         sorted_results = self.__results[indexes]
         
-        # Data
-        series = QBarSeries()
-        categories = ["Best"]
         
-        for i in range(len(sorted_results)):
-            set = QBarSet("PopBrun")
-            set << int(sorted_results[i,0])  
-            set1 = QBarSet("PopCombo") 
-            set1 << int(sorted_results[i,1])
-            set2 = QBarSet("PopCombo")
-            set2 << int(sorted_results[i,2])
-            categories.append(str(i))
-
-        series.append(set)
-        series.append(set1)
-        series.append(set2)
-        # Chart
-        chart = QChart()
-        chart.add_series(series)
-        chart.title = "Stacked Bar Chart Example"
-
-        # X-axis
-        axisX = QBarCategoryAxis()
-        axisX.append(categories)
-        chart.add_axis(axisX, Qt.AlignBottom)
-        series.attach_axis(axisX)
-
-        # Y-axis
-        chart.create_default_axes()
-        axis_y = chart.axes(Qt.Vertical)[0]
-        chart.add_axis(axis_y, Qt.AlignLeft)
-
-        # Chart view
-        self.__chart_view.set_chart(chart)
         
+        if np.size(sorted_results) % 2 == 1:
+            cells_quantity = np.size(sorted_results) + 1
+            cells_pair = False
+        else:
+            cells_quantity = np.size(sorted_results)
+            cells_pair = True
+
+       # Calculate the number of squares along one dimension
+        cols = math.ceil(math.sqrt(cells_quantity))
+        rows = math.ceil(cells_quantity / cols)
+
+        # Calculate the size of each square
+        squareWidth = size.width() / cols
+        squareHeight = size.height() / rows
+
+        # Set the pen for the border (optional)
+        pen = QPen(Qt.black)  # Border color
+        pen.set_width(1)      # Border width
+        painter.set_pen(pen)
+
+        # Draw the squares
+        for i in range(cells_quantity):
+            # if i == cells_quantity and not cells_pair:
+            #    break
+            # if i == cells_quantity - 1 and not cells_pair:
+            #     break
+            # elif i == cells_quantity:
+            #     break
+            
+            row = i // cols
+            col = i % cols
+            self._draw_chart(painter,sorted_results[i],(0 + col * squareWidth,
+                                                        0 + row * squareHeight,
+                                                        squareWidth,
+                                                        squareHeight))
+        
+        
+        painter.restore()
+        pass
 
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
+        size =  QSize(1500,500)
+        image = QImage(size, QImage.Format_ARGB32)
+        painter = QPainter(image)
+        painter.set_pen(Qt.NoPen)
+        painter.set_brush(QColor(255, 255, 255))
+        painter.draw_rect(self.__canvas)
+        
+        self._visualization_widget.image = image
+        self._box_visualization_ratio = 0.9
+        
         if np.size(self.__results)>0:
-            self._draw_charts()
+            self._draw_charts_grid(painter,size)
+            
+        painter.end()
         pass
 
