@@ -9,7 +9,7 @@ from gaapp import QSolutionToSolvePanel
 from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy, QCheckBox
 from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform
 from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF
 from PySide6.QtCharts import QChart, QChartView, QBarSeries, QBarSet, QBarCategoryAxis
@@ -33,13 +33,13 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         # self.__population_combo = 0.07
         # self.__population_bleu = 0.08
         
-        self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
+        self.__probabilites_procreation_expo = np.array([[4, 1, 0, 0, 0, 2],
                                                     [0, 2, 0, 2, 4, 2],
                                                     [0, 1, 4, 2, 0, 0 ]],dtype=np.float32)
                 
-        # self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
-        #                                             [0, 0.5, 0, 0.5, 1, 0.5],
-        #                                             [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
+        self.__probabilites_procreation_cap = np.array([[1, 0.25, 0, 0, 0, 0.5],
+                                                    [0, 0.5, 0, 0.5, 1, 0.5],
+                                                    [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
         #premiere rangée = la valeur decimal de l'array reste converti en nombre binaire
         #deuxieme rangée = l'index du couple combo dans l'array couples_finales
         self.__lookup_table_reste = np.array([[5, 3, 6,],
@@ -99,6 +99,12 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         pop_combo += r
         
         pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
+        
+        if self.__pop_cap:
+            reproduction_chart = self.__probabilites_procreation_cap
+        else:
+            reproduction_chart = self.__probabilites_procreation_expo
+        
         for _ in range(self.__annee):
             # pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
             couples_finales = np.zeros(6, dtype=np.uint8)
@@ -159,13 +165,16 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             # ---------------------------------------------
             # taux de croissance?
             # couples_finales + self.croissance_hard()
-            pop_final = (couples_finales  * self.__probabilites_procreation)*2
-            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
-            # update le nombre total de population
-            #ajouter le surplus au combo_brun (un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int)
-            accouple = np.sum(pop_final)
-            reste = pop_gen - accouple
-            pop_final[1] += reste # ajouter reste au combo
+            pop_final = (couples_finales  * reproduction_chart)*2
+            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint32)
+
+
+            #lorsque la population est cap, on doit gerer les 0.5 pop qui peut arrivé à cause des pourcentages
+            if self.__pop_cap:
+                accouple = np.sum(pop_final)
+                reste = pop_gen - accouple
+                pop_final[1] += reste # ajouter reste au combo
+                
             pop_yeux = pop_final
             pop_gen = np.sum(pop_final)
             
@@ -237,12 +246,17 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__bleu_pourcentage.set_fixed_width(100)
         self.__pop_total.set_fixed_width(100)
         
+        self.__pop_cap_checkbox = QCheckBox('Population Cap')
+        self.__pop_cap_checkbox.stateChanged.connect(self.update_population_cap)
+        self.__pop_cap = False
+        
         info_layout.add_widget(self.__brun_pourcentage)
         info_layout.add_widget(self.__combo_pourcentage)
         info_layout.add_widget(self.__bleu_pourcentage)
         info_layout.add_widget(self.__pop_total)
         
         param_layout.add_row('Information: ', info_layout)
+        param_layout.add_row('Population Cap:', self.__pop_cap_checkbox)
         param_layout.add_row('Population bleu:', pop_bleu_layout)
         param_layout.add_row('Population brun:', pop_brun_layout)
         param_layout.add_row('Population combo:', pop_combo_layout)
@@ -274,7 +288,13 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     def update_purete_combo(self):
         self.__population_combo  = self._value_pop_combo_sb.value
         self.update_population_initial()
-        
+    
+    @Slot()
+    def update_population_cap(self, state):
+        self.__pop_cap = state
+        print(state)
+
+    
     def update_population_initial(self):
         self.__population_initial = self.__population_brun + self.__population_combo + self.__population_bleu
         self.__pourcentage_brun_initial = self.__population_brun/self.__population_initial*100
