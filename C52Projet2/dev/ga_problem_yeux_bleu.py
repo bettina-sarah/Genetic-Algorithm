@@ -10,7 +10,7 @@ from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
-from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform
+from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform, QPixmap
 from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF
 from PySide6.QtCharts import QChart, QChartView, QBarSeries, QBarSet, QBarCategoryAxis
 
@@ -39,13 +39,13 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         # self.__population_bleu = 0.08
 
         
-        self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
-                                                    [0, 2, 0, 2, 4, 2],
-                                                    [0, 1, 4, 2, 0, 0 ]],dtype=np.float32)
+        # self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
+        #                                             [0, 2, 0, 2, 4, 2],
+        #                                             [0, 1, 4, 2, 0, 0 ]],dtype=np.float32)
                 
-        # self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
-        #                                             [0, 0.5, 0, 0.5, 1, 0.5],
-        #                                             [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
+        self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
+                                                    [0, 0.5, 0, 0.5, 1, 0.5],
+                                                    [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
         #premiere rangée = la valeur decimal de l'array reste converti en nombre binaire
         #deuxieme rangée = l'index du couple combo dans l'array couples_finales
         self.__lookup_table_reste = np.array([[5, 3, 6,],
@@ -73,17 +73,14 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
     @property
     def name(self) -> str: # note : override
-        """Nom du problème."""
         return 'Problème d’optimisation de pureté de couple de population'
 
     @property
     def summary(self) -> str: # note : override
-        """Résumé du problème."""
         return '''On cherche à trouver la balance parfaite  permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
 
     @property
     def description(self) -> str: # note : override
-        """Description du problème."""
         return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
   
   
@@ -178,11 +175,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             pop_final[1] += reste # ajouter reste au combo
             pop_yeux = pop_final
             pop_gen = np.sum(pop_final)
+    
             
-            # test
-            
-           
-
+    
         # pourcentage_finale = pop_yeux[2]/pop_gen   
         # score = 1 - abs(pourcentage_finale-0.50)
         
@@ -199,11 +194,11 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__results_pourcentage = np.vstack((self.__results_pourcentage, liste_pourcentages_yeux))
         self.__results = np.vstack((self.__results, chromosome))
         self.__scores = np.append(self.__scores, score)
-        print("---")
-        print("brun: ","%7.0f" % self.__population_brun,"| combo","%7.0f" % self.__population_combo,"| bleu","%7.0f" % self.__population_bleu, "| pop_gen:","%7.0f" %pop_gen)
-        print("brun: ","%7.4f" % chromosome[0],"| combo","%7.4f" % chromosome[1],"| bleu","%7.4f" % chromosome[2], "|")
-        print("brun: ","%7.0f" % pop_yeux[0],"| combo","%7.0f" %pop_yeux[1],"| bleu", "%7.0f" %pop_yeux[2], "|")
-        print("brun: ","%7.3f" % pourcentage_brun,"| combo","%7.3f" % pourcentage_combo,"| bleu","%7.3f" % pourcentage_bleu, "| score:","%7.7f" %score)
+        # print("---")
+        # print("brun: ","%7.0f" % self.__population_brun,"| combo","%7.0f" % self.__population_combo,"| bleu","%7.0f" % self.__population_bleu, "| pop_gen:","%7.0f" %pop_gen)
+        # print("brun: ","%7.4f" % chromosome[0],"| combo","%7.4f" % chromosome[1],"| bleu","%7.4f" % chromosome[2], "|")
+        # print("brun: ","%7.0f" % pop_yeux[0],"| combo","%7.0f" %pop_yeux[1],"| bleu", "%7.0f" %pop_yeux[2], "|")
+        # print("brun: ","%7.3f" % pourcentage_brun,"| combo","%7.3f" % pourcentage_combo,"| bleu","%7.3f" % pourcentage_bleu, "| score:","%7.7f" %score)
         return score
   
     
@@ -235,13 +230,37 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self._value_pop_combo_sb.valueChanged.connect(self.update_purete_combo)
 
         #à modifier avce les values du canvas
+        
+        self.__color_mapping = {
+                (0, 10): (128,0,0),
+                (10, 20): (178,34,34),   
+                (20, 30): (255,0,0),  
+                (30, 40): (255,140,0), 
+                (40, 50): (255,215,0),  
+                (50, 60): (173,255,47), 
+                (60, 70): (50,205,50),  
+                (70, 80): (60,179,113), 
+                (80, 90): (34,139,34),
+                (90, 100): (128,128,0)}
+        
+        
+        icon_size = 15
         info_layout = QHBoxLayout()
         self.__pourcentage_brun_initial = 0
         self.__pourcentage_combo_initial = 0
         self.__pourcentage_bleu_initial = 0
         self.__population_initial = 0
+        self.__brun_icon = QLabel()
+        self.__brun_icon.set_fixed_width(icon_size)
+        self.__brun_icon.set_fixed_height(icon_size)
         self.__brun_pourcentage = QLabel('Brun 33%')
+        self.__combo_icon = QLabel()
+        self.__combo_icon.set_fixed_width(icon_size)
+        self.__combo_icon.set_fixed_height(icon_size)
         self.__combo_pourcentage = QLabel('Combo 33%')
+        self.__bleu_icon = QLabel()
+        self.__bleu_icon.set_fixed_width(icon_size)
+        self.__bleu_icon.set_fixed_height(icon_size)
         self.__bleu_pourcentage = QLabel('Bleu 34%')
         self.__pop_total = QLabel('pop total: 900')
         
@@ -250,8 +269,13 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__bleu_pourcentage.set_fixed_width(100)
         self.__pop_total.set_fixed_width(100)
         
+        
+        info_layout.add_widget(self.__brun_icon)
+        
         info_layout.add_widget(self.__brun_pourcentage)
+        info_layout.add_widget(self.__combo_icon)
         info_layout.add_widget(self.__combo_pourcentage)
+        info_layout.add_widget(self.__bleu_icon)
         info_layout.add_widget(self.__bleu_pourcentage)
         info_layout.add_widget(self.__pop_total)
         
@@ -313,13 +337,27 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__pourcentage_bleu_initial  = self.__population_bleu/self.__population_initial*100
         
         self.update_yeux(self.__brun_pourcentage, self.__pourcentage_brun_initial, "Brun")
+        self.__set_icon(self.__brun_icon, self.__pourcentage_brun_initial)
         self.update_yeux(self.__combo_pourcentage, self.__pourcentage_combo_initial, "Combo")
+        self.__set_icon(self.__combo_icon, self.__pourcentage_combo_initial)
         self.update_yeux(self.__bleu_pourcentage, self.__pourcentage_bleu_initial, "Bleu")
+        self.__set_icon(self.__bleu_icon, self.__pourcentage_bleu_initial)
 
         self.__pop_total.text = str(self.__population_initial)+" Individus"
         
     def update_yeux(self, label, pourcentage, nom):
         label.text = nom+": "+str(round(pourcentage,2))+"%"
+        
+
+    def __set_icon(self, label, percentage):
+        pixmap = QPixmap(label.size)
+        
+        for key in self.__color_mapping:
+            if key[0] <= percentage < key[1]:
+                r, g, b = self.__color_mapping[key]
+                pixmap.fill(QColor(r, g, b))
+    
+        label.pixmap = pixmap
 
     
     @property
@@ -421,6 +459,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         pass
 
 
+
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
         size =  QSize(1500,1500)
         image = QImage(size, QImage.Format_ARGB32)
@@ -445,5 +484,3 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             self.__pourcentage_combo_final.text = "% Combos: " + str(round(sorted_results_pourcentage[0][2],2))
         else:
             painter.end()
-     
-        
