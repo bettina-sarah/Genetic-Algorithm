@@ -222,9 +222,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         param_group_box = QGroupBox('Parameters')
         param_layout = QFormLayout(param_group_box)
 
-        self._value_pop_bleu_sb, pop_bleu_layout = create_scroll_int_value(100,500,1000,"")
-        self._value_pop_brun_sb, pop_brun_layout = create_scroll_int_value(100,500,1000,"")
-        self._value_pop_combo_sb, pop_combo_layout = create_scroll_int_value(100,500,1000,"")
+        self._value_pop_bleu_sb, pop_bleu_layout = create_scroll_int_value(100,250,500,"")
+        self._value_pop_brun_sb, pop_brun_layout = create_scroll_int_value(100,250,500,"")
+        self._value_pop_combo_sb, pop_combo_layout = create_scroll_int_value(100,250,500,"")
         
         self._value_pop_bleu_sb.valueChanged.connect(self.update_purete_bleu)
         self._value_pop_brun_sb.valueChanged.connect(self.update_purete_brun)
