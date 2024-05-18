@@ -222,6 +222,27 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self._value_pop_combo_sb.valueChanged.connect(self.update_purete_combo)
 
         #à modifier avce les values du canvas
+        info_layout = QHBoxLayout()
+        self.__pourcentage_brun_initial = 0
+        self.__pourcentage_combo_initial = 0
+        self.__pourcentage_bleu_initial = 0
+        self.__population_initial = 0
+        self.__brun_pourcentage = QLabel('Brun 33%')
+        self.__combo_pourcentage = QLabel('Combo 33%')
+        self.__bleu_pourcentage = QLabel('Bleu 34%')
+        self.__pop_total = QLabel('pop total: 900')
+        
+        self.__brun_pourcentage.set_fixed_width(100)
+        self.__combo_pourcentage.set_fixed_width(100)
+        self.__bleu_pourcentage.set_fixed_width(100)
+        self.__pop_total.set_fixed_width(100)
+        
+        info_layout.add_widget(self.__brun_pourcentage)
+        info_layout.add_widget(self.__combo_pourcentage)
+        info_layout.add_widget(self.__bleu_pourcentage)
+        info_layout.add_widget(self.__pop_total)
+        
+        param_layout.add_row('Information: ', info_layout)
         param_layout.add_row('Population bleu:', pop_bleu_layout)
         param_layout.add_row('Population brun:', pop_brun_layout)
         param_layout.add_row('Population combo:', pop_combo_layout)
@@ -242,14 +263,32 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     @Slot()
     def update_purete_bleu(self):
         self.__population_bleu  = self._value_pop_bleu_sb.value
-  
+        self.update_population_initial()
+ 
     @Slot()
     def update_purete_brun(self):
         self.__population_brun  = self._value_pop_brun_sb.value
+        self.update_population_initial()
 
     @Slot()
     def update_purete_combo(self):
         self.__population_combo  = self._value_pop_combo_sb.value
+        self.update_population_initial()
+        
+    def update_population_initial(self):
+        self.__population_initial = self.__population_brun + self.__population_combo + self.__population_bleu
+        self.__pourcentage_brun_initial = self.__population_brun/self.__population_initial*100
+        self.__pourcentage_combo_initial = self.__population_combo/self.__population_initial*100
+        self.__pourcentage_bleu_initial  = self.__population_bleu/self.__population_initial*100
+        
+        self.update_yeux(self.__brun_pourcentage, self.__pourcentage_brun_initial, "Brun")
+        self.update_yeux(self.__combo_pourcentage, self.__pourcentage_combo_initial, "Combo")
+        self.update_yeux(self.__bleu_pourcentage, self.__pourcentage_bleu_initial, "Bleu")
+
+        self.__pop_total.text = str(self.__population_initial)+" Individus"
+        
+    def update_yeux(self, label, pourcentage, nom):
+        label.text = nom+": "+str(round(pourcentage,2))+"%"
 
     
     @property
