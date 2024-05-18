@@ -280,9 +280,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         info_layout.add_widget(self.__pop_total)
         
         param_layout.add_row('Information: ', info_layout)
-        param_layout.add_row('Population bleu:', pop_bleu_layout)
         param_layout.add_row('Population brun:', pop_brun_layout)
         param_layout.add_row('Population combo:', pop_combo_layout)
+        param_layout.add_row('Population bleu:', pop_bleu_layout)
         
         param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
@@ -301,12 +301,12 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         meilleurs_pourcentages = QGroupBox()
         meilleurs_pourcentages.resize(100,5)
         pourcentages_pop_meilleure_solution = QHBoxLayout()
-        self.__pourcentage_bleu_final = QLabel()
-        pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_bleu_final)
         self.__pourcentage_brun_final = QLabel()
         pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_brun_final)
         self.__pourcentage_combo_final = QLabel()
         pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_combo_final)
+        self.__pourcentage_bleu_final = QLabel()
+        pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_bleu_final)
         meilleurs_pourcentages.set_layout(pourcentages_pop_meilleure_solution)
         param_layout.add_row("Pourcentages: ", meilleurs_pourcentages)
 
@@ -394,7 +394,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         for i in range(3):
             painter.set_brush(self.__colors[i])
-            inner_rect = QRectF(outer_rect.left() + i * inner_width, outer_rect.top(), inner_width, inner_height * (solution[i]))
+            inner_rect = QRectF(outer_rect.left() + i * inner_width, outer_rect.bottom() - inner_height * (solution[i]), inner_width, inner_height * (solution[i]))
             painter.draw_rect(inner_rect)
         
         if index == 0:
