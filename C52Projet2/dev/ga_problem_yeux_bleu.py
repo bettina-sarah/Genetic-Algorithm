@@ -116,6 +116,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             # revenir a pop_yeux: faire nos couples diverse (non-pure)
             couples = couples - couples_pures
             pop_yeux = couples * 2 # brun, combo, bleu restants
+            # couples_finales[:3]*2
             
             # combos a faire: ORDRE IMPORTANT: bleu-combo , brun-bleu, brun-combo, 
             # couples impures:
@@ -157,7 +158,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
                 couples_finales[index_combo] = couples_finales[index_combo] + 1 
             # ---------------------------------------------
             # taux de croissance?
-            couples_finales + self.croissance_hard()
+            # couples_finales + self.croissance_hard()
             pop_final = (couples_finales  * self.__probabilites_procreation)*2
             pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
             # update le nombre total de population
@@ -186,50 +187,12 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__results = np.vstack((self.__results, pop_yeux))
         self.__scores = np.append(self.__scores, score)
         print("---")
-
-        print("brun: ","%7.4f" % chromosome[0],"| combo","%7.4f" % chromosome[1],"| bleu","%7.4f" % chromosome[2])
-        print("brun: ","%7.0f" % pop_yeux[0],"| combo","%7.0f" %pop_yeux[1],"| bleu", "%7.0f" %pop_yeux[2], "| pop_gen:","%7.0f" %pop_gen)
+        print("brun: ","%7.0f" % self.__population_brun,"| combo","%7.0f" % self.__population_combo,"| bleu","%7.0f" % self.__population_bleu, "| pop_gen:","%7.0f" %pop_gen)
+        print("brun: ","%7.4f" % chromosome[0],"| combo","%7.4f" % chromosome[1],"| bleu","%7.4f" % chromosome[2], "|")
+        print("brun: ","%7.0f" % pop_yeux[0],"| combo","%7.0f" %pop_yeux[1],"| bleu", "%7.0f" %pop_yeux[2], "|")
         print("brun: ","%7.3f" % pourcentage_brun,"| combo","%7.3f" % pourcentage_combo,"| bleu","%7.3f" % pourcentage_bleu, "| score:","%7.7f" %score)
         return score
-    
-    def calcul_couples_pures(self, chromosome):
-            # pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
-            couples_finales = np.zeros(6, dtype=np.uint8)
-            
-            #retirer les impaires
-            reste = pop_yeux % 2
-            pop_yeux = pop_yeux - reste
-            # faire couples  et apres, couples pures avec % purete; dtype assure le math.floor
-            couples = pop_yeux / 2
-            couples_pures = np.array(couples * chromosome, dtype=np.uint8)
-            
-            # ajoute les trois valeurs de couples pures dans couple finaux
-            couples_finales[:3] = couples_pures
-    
-    def calcul_couples_pures(self, chromosome):
-        pass
-        
-    
-    def calcul_couples_mixtes(self):
-        pass
-    
-    # def croissance_couples(self):
-    #     croissances = np.zeros((5),dtype=int)
-    #     croissances[0] = random.randrange(int(self.__taux_croissance/3),
-    #                                       int(self.__taux_croissance/2))
-        
-    #     croissances[1] = random.randrange(int((self.__taux_croissance - croissances[0])/3),
-    #                                         int((self.__taux_croissance - croissances[0])/2))
-        
-    #     croissances[2]  = random.randrange(int((self.__taux_croissance - np.sum(croissances[:1]))/3),
-    #                                        int((self.__taux_croissance - np.sum(croissances[:1]))/2))
-        
-    #     croissances[3]  = random.randrange(int((self.__taux_croissance - np.sum(croissances[:2]))/3),
-    #                                        int((self.__taux_croissance - np.sum(croissances[:2]))/2))
-        
-    #     croissances[4]  = self.__taux_croissance - np.sum(croissances[:-1])
-    #     return croissances
-    #     pass
+  
     
     def croissance_couples(self):
         rng = np.random.default_rng()
@@ -241,14 +204,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         np.random.shuffle(array)
         return array
         
-    # def croissance_couples(self):
-    #     rng = np.random.default_rng()
-    #     croissance = np.linspace(0, self.__taux_croissance,num=8,dtype=np.uint8)
-
-    #     croissance2 = croissance[1:-1]
-    #     sum = np.sum(croissance)
-    #     sum2 = np.sum(croissance2) 
-    #     return croissance2
     
     def display_panel(self):
         
