@@ -61,7 +61,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         self.__results = np.empty((0,3),dtype=np.float32)
         self.__scores = np.empty(0,dtype=np.float32)
-        self.__results_pourcentage = np.empty((0,3),dtype=np.float32)
+        self.__results_pourcentage = np.empty((0,3),dtype=np.float64)
         
         print(" ")
 
@@ -195,7 +195,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         score = ((pourcentage_bleu-0.33)**2 + (pourcentage_brun - 0.33)**2 + (pourcentage_combo-0.33)**2)**0.5
         score = 1 - score
 
-        liste_pourcentages_yeux = np.array([pourcentage_bleu,pourcentage_brun,pourcentage_combo],dtype=np.float32)
+        liste_pourcentages_yeux = np.array([pourcentage_bleu * 100,pourcentage_brun * 100,pourcentage_combo * 100],dtype=np.float64)
         self.__results_pourcentage = np.vstack((self.__results_pourcentage, liste_pourcentages_yeux))
         self.__results = np.vstack((self.__results, chromosome))
         self.__scores = np.append(self.__scores, score)
@@ -361,7 +361,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         if index == 0:
             yellow_pen = QPen(QColor(255, 255, 0)) 
-            yellow_pen.set_width(10)  
+            yellow_pen.set_width(20)
             painter.set_brush(Qt.NoBrush)
             painter.set_pen(yellow_pen)
             painter.draw_rect(outer_rect)
@@ -415,6 +415,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         self.__results = np.empty((0,3),dtype=np.float32)
         self.__scores = np.empty(0,dtype=np.float32)
+        self.__results_pourcentage = np.empty((0,3),dtype=np.float64)
         
         painter.restore()
         pass
@@ -439,9 +440,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             sorted_results_pourcentage = self.__results_pourcentage[indexes]
             self._draw_charts_grid(painter,size, sorted_results)
             painter.end()
-            self.__pourcentage_bleu_final.text = "% Bleus: " + str(round(sorted_results_pourcentage[0][0],3))
-            self.__pourcentage_brun_final.text = "% Bruns: " + str(round(sorted_results_pourcentage[0][1],3))
-            self.__pourcentage_combo_final.text = "% Combos: " + str(round(sorted_results_pourcentage[0][2],3))
+            self.__pourcentage_bleu_final.text = "% Bleus: " + str(round(sorted_results_pourcentage[0][0],2))
+            self.__pourcentage_brun_final.text = "% Bruns: " + str(round(sorted_results_pourcentage[0][1],2))
+            self.__pourcentage_combo_final.text = "% Combos: " + str(round(sorted_results_pourcentage[0][2],2))
         else:
             painter.end()
      
