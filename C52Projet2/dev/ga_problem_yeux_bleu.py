@@ -33,21 +33,21 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         # self.__population_combo = 0.07
         # self.__population_bleu = 0.08
         
-        # self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
-        #                                             [0, 2, 0, 2, 4, 2],
-        #                                             [0, 1, 4, 2, 0, 0 ]],dtype=np.float32)
+        self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
+                                                    [0, 2, 0, 2, 4, 2],
+                                                    [0, 1, 4, 2, 0, 0 ]],dtype=np.float32)
                 
-        self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
-                                                    [0, 0.5, 0, 0.5, 1, 0.5],
-                                                    [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
+        # self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
+        #                                             [0, 0.5, 0, 0.5, 1, 0.5],
+        #                                             [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
         #premiere rangée = la valeur decimal de l'array reste converti en nombre binaire
         #deuxieme rangée = l'index du couple combo dans l'array couples_finales
         self.__lookup_table_reste = np.array([[5, 3, 6,],
                                               [4, 3, 5]],dtype=np.uint8)
         # ajouté: brun + bleu = 100% combo; 0% brun et 0% bleu
-        self.__population_brun = 100
-        self.__population_combo = 100
-        self.__population_bleu  = 100
+        self.__population_brun  = self._value_pop_brun_sb.value
+        self.__population_combo  = self._value_pop_combo_sb.value
+        self.__population_bleu   = self._value_pop_bleu_sb.value
         
         
         self.__results = np.empty((0,3),dtype=np.float32)
