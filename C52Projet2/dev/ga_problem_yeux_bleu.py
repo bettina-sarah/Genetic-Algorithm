@@ -98,7 +98,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         pop_gen += r
         pop_combo += r
         
-        pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
+        pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint64)
         
         if self.__pop_cap:
             reproduction_chart = self.__probabilites_procreation_cap
@@ -107,14 +107,14 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         for _ in range(self.__annee):
             # pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
-            couples_finales = np.zeros(6, dtype=np.uint8)
+            couples_finales = np.zeros(6, dtype=np.uint64)
             
             #retirer les impaires
             reste = pop_yeux % 2
             pop_yeux = pop_yeux - reste
             # faire couples  et apres, couples pures avec % purete; dtype assure le math.floor
             couples = pop_yeux / 2
-            couples_pures = np.array(couples * chromosome, dtype=np.uint8)
+            couples_pures = np.array(couples * chromosome, dtype=np.uint64)
             couples_finales[:3] = couples_pures
             
             
@@ -126,7 +126,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             
             # combos a faire: ORDRE IMPORTANT: bleu-combo , brun-bleu, brun-combo, 
             # couples impures:
-            couples_combo = np.zeros(3, dtype=np.uint8)
+            couples_combo = np.zeros(3, dtype=np.uint64)
             
             
             sorted_pop_yeux = np.argsort(pop_yeux)
@@ -166,7 +166,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             # taux de croissance?
             # couples_finales + self.croissance_hard()
             pop_final = (couples_finales  * reproduction_chart)*2
-            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint32)
+            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint64)
 
 
             #lorsque la population est cap, on doit gerer les 0.5 pop qui peut arrivé à cause des pourcentages
