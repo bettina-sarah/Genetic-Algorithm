@@ -291,10 +291,10 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         
         if np.size(sorted_results) % 2 == 1:
-            cells_quantity = np.size(sorted_results) + 1
+            cells_quantity = np.ma.size(sorted_results,0) + 1
             cells_pair = False
         else:
-            cells_quantity = np.size(sorted_results)
+            cells_quantity = np.ma.size(sorted_results,0)
             cells_pair = True
 
        # Calculate the number of squares along one dimension
@@ -314,8 +314,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         for i in range(cells_quantity):
             # if i == cells_quantity and not cells_pair:
             #    break
-            # if i == cells_quantity - 1 and not cells_pair:
-            #     break
+            if i == cells_quantity - 1 and not cells_pair:
+                 break
             # elif i == cells_quantity:
             #     break
             
@@ -326,6 +326,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
                                                         squareWidth,
                                                         squareHeight))
         
+        self.__results = np.empty((0,3),dtype=np.float32)
+        self.__scores = np.empty(0,dtype=np.float32)
         
         painter.restore()
         pass
@@ -337,6 +339,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         painter.set_pen(Qt.NoPen)
         painter.set_brush(QColor(255, 255, 255))
         painter.draw_rect(self.__canvas)
+        
         
         self._visualization_widget.image = image
         self._box_visualization_ratio = 0.9
