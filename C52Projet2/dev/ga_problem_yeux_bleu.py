@@ -61,6 +61,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         self.__results = np.empty((0,3),dtype=np.float32)
         self.__scores = np.empty(0,dtype=np.float32)
+        self.__results_pourcentage = np.empty((0,3),dtype=np.float32)
         
         print(" ")
 
@@ -184,6 +185,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
         # pourcentage_finale = pop_yeux[2]/pop_gen   
         # score = 1 - abs(pourcentage_finale-0.50)
+        
         pourcentage_bleu = pop_yeux[2]/pop_gen  
         pourcentage_brun = pop_yeux[0]/pop_gen
         pourcentage_combo = pop_yeux[1]/pop_gen
@@ -193,8 +195,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         score = ((pourcentage_bleu-0.33)**2 + (pourcentage_brun - 0.33)**2 + (pourcentage_combo-0.33)**2)**0.5
         score = 1 - score
 
-
-        
+        liste_pourcentages_yeux = np.array([pourcentage_bleu,pourcentage_brun,pourcentage_combo],dtype=np.float32)
+        self.__results_pourcentage = np.vstack((self.__results_pourcentage, liste_pourcentages_yeux))
         self.__results = np.vstack((self.__results, chromosome))
         self.__scores = np.append(self.__scores, score)
         print("---")
@@ -221,7 +223,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         centre_layout = QVBoxLayout(self)
         
         #param
-        param_group_box = QGroupBox('Parameters')
+        param_group_box = QGroupBox('Informations')
         param_layout = QFormLayout(param_group_box)
 
         self._value_pop_bleu_sb, pop_bleu_layout = create_scroll_int_value(100,500,1000,"")
@@ -257,17 +259,35 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         param_layout.add_row('Population bleu:', pop_bleu_layout)
         param_layout.add_row('Population brun:', pop_brun_layout)
         param_layout.add_row('Population combo:', pop_combo_layout)
+        
         param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
+
+
         #visualization
         visualization_group_box = QGroupBox('Visualization')
         visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self._visualization_layout = QGridLayout(visualization_group_box)
-        
         self._visualization_widget = QImageViewer(True)
         self._visualization_layout.add_widget(self._visualization_widget)
-        
+
+
+
+        #Meilleurs pourcentages display
+        meilleurs_pourcentages = QGroupBox()
+        meilleurs_pourcentages.resize(100,5)
+        pourcentages_pop_meilleure_solution = QHBoxLayout()
+        self.__pourcentage_bleu_final = QLabel()
+        pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_bleu_final)
+        self.__pourcentage_brun_final = QLabel()
+        pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_brun_final)
+        self.__pourcentage_combo_final = QLabel()
+        pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_combo_final)
+        meilleurs_pourcentages.set_layout(pourcentages_pop_meilleure_solution)
+        param_layout.add_row("Pourcentages: ", meilleurs_pourcentages)
+
         centre_layout.add_widget(param_group_box)
+        # centre_layout.add_widget(meilleurs_pourcentages)
         centre_layout.add_widget(visualization_group_box)
         pass
     
@@ -352,11 +372,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         
         
-    def _draw_charts_grid(self,painter,size):
+    def _draw_charts_grid(self,painter,size, sorted_results):
         painter.save()
-        indexes = np.argsort(self.__scores, axis=0)[::-1]
-        sorted_results = self.__results[indexes]
-        
         
         
         if np.size(sorted_results) % 2 == 1:
@@ -417,7 +434,15 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self._box_visualization_ratio = 0.9
         
         if np.size(self.__results)>0:
-            self._draw_charts_grid(painter,size)
-            
-        painter.end()
+            indexes = np.argsort(self.__scores, axis=0)[::-1]
+            sorted_results = self.__results[indexes]
+            sorted_results_pourcentage = self.__results_pourcentage[indexes]
+            self._draw_charts_grid(painter,size, sorted_results)
+            painter.end()
+            self.__pourcentage_bleu_final.text = "% Bleus: " + str(round(sorted_results_pourcentage[0][0],3))
+            self.__pourcentage_brun_final.text = "% Bruns: " + str(round(sorted_results_pourcentage[0][1],3))
+            self.__pourcentage_combo_final.text = "% Combos: " + str(round(sorted_results_pourcentage[0][2],3))
+        else:
+            painter.end()
+     
         
