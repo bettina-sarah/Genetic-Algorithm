@@ -21,36 +21,21 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     def __init__(self, width : int = 10., height : int = 5., parent : QWidget | None = None) -> None:
         super().__init__(parent)
     
-
-        self.__chart_view = QChartView()
         self.display_panel()
         
-
         self.__canvas = QRectF(0,0,1500,500)
-        
-        self.__population = 1000
-        self.__taux_croissance = 10
-        self.__preference = 1
-
         self.__annee = 20
 
-        # self.__population_brun = 0.85
-        # self.__population_combo = 0.07
-        # self.__population_bleu = 0.08
-
-        
-        # self.__probabilites_procreation = np.array([[4, 1, 0, 0, 0, 2],
-        #                                             [0, 2, 0, 2, 4, 2],
-        #                                             [0, 1, 4, 2, 0, 0 ]],dtype=np.float32)
                 
         self.__probabilites_procreation = np.array([[1, 0.25, 0, 0, 0, 0.5],
                                                     [0, 0.5, 0, 0.5, 1, 0.5],
                                                     [0, 0.25, 1, 0.5, 0, 0 ]],dtype=np.float32)
-        #premiere rangée = la valeur decimal de l'array reste converti en nombre binaire
-        #deuxieme rangée = l'index du couple combo dans l'array couples_finales
+        
+        #premiere rangée = la valeur decimal de l'array 'reste' converti en nombre binaire
+        #deuxieme rangée = l'index du couple combo dans l'array 'couples_finales' 
         self.__lookup_table_reste = np.array([[5, 3, 6,],
                                               [4, 3, 5]],dtype=np.uint8)
-        # ajouté: brun + bleu = 100% combo; 0% brun et 0% bleu
+        
         self.__population_brun  = self._value_pop_brun_sb.value
         self.__population_combo  = self._value_pop_combo_sb.value
         self.__population_bleu   = self._value_pop_bleu_sb.value
@@ -63,9 +48,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__scores = np.empty(0,dtype=np.float32)
         self.__results_pourcentage = np.empty((0,3),dtype=np.float64)
         
-        print(" ")
 
-    
     @property
     def unknown_value(self) -> float:
         """La valeur recherchée par l'algorithme génétique."""
@@ -83,51 +66,61 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     def description(self) -> str: # note : override
         return '''On cherche à trouver les taux de pureté de couple néccessaire pour obtenir ce qui se rapproche le plus d'une balance de population entre les 3 paires de yeux après qu'un certain nombre d'année ai passé'''
 
+    @property
+    def pop_brun(self):
+        return self.__population_brun
+    
+    @pop_brun.setter
+    def pop_brun(self, value):
+        self.__population_brun = value
+
+    @property
+    def pop_combo(self):
+        return self.__population_combo
+    
+    @pop_combo.setter
+    def pop_combo(self, value):
+        self.__population_combo = value
+
+    @property
+    def pop_bleu(self):
+        return self.__population_bleu
+    
+    @pop_bleu.setter
+    def pop_bleu(self, value):
+        self.__population_bleu = value
+
 
     def __call__(self, chromosome : NDArray) -> float:
         """Retourne le volume de la boîte obtenue en fonction de la taille de la découpe."""
         
-        # purete_brun = chromosome[0]
-        # purete_combo = chromosome[1]
-        # purete_bleu = chromosome[2]
+        pop_gen = self.pop_brun + self.pop_combo + self.pop_bleu
         
-        # chromosome = np.array([0.3,0.5,0.8])
-        #conversion % choisis par le user en nbr int de personnes en fonc de population
-        
-        #refactor pour setter getter ****************************************************************************************
-        pop_brun =  self.__population_brun
-        pop_combo = self.__population_combo
-        pop_bleu =  self.__population_bleu
-        
-        pop_gen = pop_brun + pop_combo + pop_bleu
-        
+        # commence avec une population paire
         r = pop_gen % 2
         pop_gen += r
-        pop_combo += r
+        self.pop_combo += r
         
-        pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
+        pop_yeux = np.array([self.pop_brun, self.pop_combo, self.pop_bleu], dtype=np.uint32)
         for _ in range(self.__annee):
-            # pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
-            couples_finales = np.zeros(6, dtype=np.uint8)
+
+            couples_finales = np.zeros(6, dtype=np.uint32)
             
             #retirer les impaires
             reste = pop_yeux % 2
             pop_yeux = pop_yeux - reste
-            # faire couples  et apres, couples pures avec % purete; dtype assure le math.floor
+
+            # faire tout les couples pure potentiels pour ensuite garder un % selon le chromosone
             couples = pop_yeux / 2
-            couples_pures = np.array(couples * chromosome, dtype=np.uint8)
+            couples_pures = np.array(couples * chromosome, dtype=np.uint32)
             couples_finales[:3] = couples_pures
-            
-            
             
             # revenir a pop_yeux: faire nos couples diverse (non-pure)
             couples = couples - couples_pures
-            pop_yeux = couples * 2 # brun, combo, bleu restants
-            # couples_finales[:3]*2
-            
-            # combos a faire: ORDRE IMPORTANT: bleu-combo , brun-bleu, brun-combo, 
-            # couples impures:
-            couples_combo = np.zeros(3, dtype=np.uint8)
+            pop_yeux = couples * 2
+
+            # couples mixtes:
+            couples_combo = np.zeros(3, dtype=np.uint32)
             
             
             sorted_pop_yeux = np.argsort(pop_yeux)
@@ -167,7 +160,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             # taux de croissance?
             # couples_finales + self.croissance_hard()
             pop_final = (couples_finales  * self.__probabilites_procreation)*2
-            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
+            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint32)
             # update le nombre total de population
             #ajouter le surplus au combo_brun (un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int)
             accouple = np.sum(pop_final)
@@ -202,15 +195,15 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         return score
   
     
-    def croissance_couples(self):
-        rng = np.random.default_rng()
-        croissance = rng.integers(1, 6, size=6)
-        return croissance
+    # def croissance_couples(self):
+    #     rng = np.random.default_rng()
+    #     croissance = rng.integers(1, 6, size=6)
+    #     return croissance
     
-    def croissance_hard(self):
-        array = np.array([3,2,2,1,1,1])
-        np.random.shuffle(array)
-        return array
+    # def croissance_hard(self):
+    #     array = np.array([3,2,2,1,1,1])
+    #     np.random.shuffle(array)
+    #     return array
         
     
     def display_panel(self):
@@ -317,17 +310,17 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     
     @Slot()
     def update_purete_bleu(self):
-        self.__population_bleu  = self._value_pop_bleu_sb.value
+        self.pop_bleu  = self._value_pop_bleu_sb.value
         self.update_population_initial()
  
     @Slot()
     def update_purete_brun(self):
-        self.__population_brun  = self._value_pop_brun_sb.value
+        self.pop_brun  = self._value_pop_brun_sb.value
         self.update_population_initial()
 
     @Slot()
     def update_purete_combo(self):
-        self.__population_combo  = self._value_pop_combo_sb.value
+        self.pop_combo  = self._value_pop_combo_sb.value
         self.update_population_initial()
         
     def update_population_initial(self):
