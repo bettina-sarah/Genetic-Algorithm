@@ -9,10 +9,10 @@ from gaapp import QSolutionToSolvePanel
 from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
-from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform, QPixmap
-from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF
-from PySide6.QtCharts import QChart, QChartView, QBarSeries, QBarSet, QBarCategoryAxis
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
+from PySide6.QtGui import QImage, QPainter, QColor, QPen, QPixmap
+from PySide6.QtCore import Slot, Qt, QSize, QRectF
+from PySide6.QtCharts import QChartView
 
 from __feature__ import snake_case, true_property
 

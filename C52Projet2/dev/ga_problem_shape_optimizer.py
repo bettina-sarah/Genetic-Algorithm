@@ -7,9 +7,9 @@ from gaapp import QSolutionToSolvePanel
 from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy, QPushButton
-from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QPen, QBrush, QFont, QTransform
-from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, QSizeF, Signal
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel,QComboBox, QFormLayout, QGroupBox, QGridLayout, QSizePolicy, QPushButton
+from PySide6.QtGui import QImage, QPainter, QColor, QPolygonF, QTransform
+from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, Signal
 
 from __feature__ import snake_case, true_property
 
@@ -65,14 +65,15 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
                    QPointF(-0.5,-1)]
         }
         
-        self.__shape_map = {
-        "Triangle":self.__create_triangle,
-        "Square":self.__create_square,
-        "Star":self.__create_star,
-        "Hexagon":self.__create_hexagon
-        }
+        # self.__shape_map = {
+        # "Triangle":lambda "Triangle" :  self.__create_shape("Triangle"),
+        # "Square":self.__create_shape("Square"),
+        # "Star":self.__create_shape("Star"),
+        # "Hexagon":self.__create_shape("Hexagon")
+        # }
         
-        self.__shape_map[self.__shape_selection.current_text]()
+        self.__create_shape(self.__shape_selection.current_text)
+        #self.__shape_map[self.__shape_selection.current_text]()
         self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
     
     @property
@@ -135,6 +136,12 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
 
         return area
     
+    def __create_shape(self,key):
+        self.__polygon.clear()
+        for i in range(len(self.__shapes_points[key])):
+            self.__polygon.append(self.__shapes_points[key][i])
+        self.__shape_points_count = len(self.__shapes_points[key])
+
     def __create_square(self):
         self.__polygon.clear()
         for i in range(len(self.__shapes_points["Square"])):
@@ -209,7 +216,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__point_quantity = self.__value_scroll_bar.value
         self.__nuage_point.clear()
         self.__populate_nuage()
-        
         self.__draw_obstacles(self.__painter_prepare_obstacles())
         
     @Slot()
@@ -221,7 +227,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     @Slot()
     def choose_shape(self):
         shape = str(self.__shape_selection.current_text)
-        self.__shape_map[shape]()
+        self.__create_shape(shape)
         self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
         
     def __painter_prepare_obstacles(self):
