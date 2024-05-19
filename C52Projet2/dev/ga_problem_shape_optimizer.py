@@ -35,6 +35,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__nuage_point = []
         self.__populate_nuage()
 
+
         
         self.__areas = np.empty(0, dtype=float)
         
@@ -74,7 +75,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__shape_map[self.__shape_selection.current_text]()
         self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
     
-    
     @property
     def unknown_value(self) -> float:
         """La valeur recherchée par l'algorithme génétique."""
@@ -98,7 +98,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     
     @property
     def default_parameters(self) -> Parameters:
-        #a remplacer
         engine_parameters = Parameters()
         engine_parameters.maximum_epoch = 100
         engine_parameters.population_size = 20
@@ -116,20 +115,15 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         scaling = chromosome[3]
         
         transform = QTransform()
-        # transform prend les translations, rotation, scaling
-        #transform sur le Polygon
         transform.translate(translation_x, translation_y)
         transform.rotate(rotation)
         transform.scale(scaling, scaling)
         polygon_transformed = transform.map(self.__polygon)
         area = 0
-        # canvas.contains (polygon.boundingRect) si vrai return point 0
+       
         if not self.__canvas.contains(polygon_transformed.bounding_rect()):
-            return area
-        
-        
-        # polygon.containsPoint(nuage_points[:]) si vrai return point 0
-        #range
+            return area 
+      
         for i in range(self.__point_quantity):
             if polygon_transformed.contains_point(self.__nuage_point[i],Qt.OddEvenFill):
                 return area
@@ -195,14 +189,12 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
             self.__shape_selection.add_item(i)
             
         self.__shape_selection.currentTextChanged.connect(self.choose_shape)
-        #à modifier avce les values du canvas
         size_label = QLabel(str(int(self.__canvas.width())) + ' x ' + str(int(self.__canvas.height()))) 
         param_layout.add_row('Canvas size', size_label)
         param_layout.add_row('Obstacle count:', obstacle_layout)
         param_layout.add_row('Shape:', self.__shape_selection)
         param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
-        #visualization
         visualization_group_box = QGroupBox('Visualization')
         visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         visualization_layout = QGridLayout(visualization_group_box)
@@ -275,13 +267,11 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
                               self.__obstacle_size,
                               self.__obstacle_size)
             
-        painter.restore() 
-        pass
+        painter.restore()
     
     def __draw_shapes(self, painter):
         painter.save()
         painter.set_brush(QColor(100, 0, 255))
-        #sort du plus grand au plus petit
         indexes = np.argsort(self.__areas, axis=0)[::-1]
         sorted_shapes = self.__shapes[indexes]
 
@@ -298,10 +288,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
 
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
 
-        #Qpainter
-        #crée un image de la grosseur du visualization+box
         image = QImage(QSize(500, 250), QImage.Format_ARGB32)
-        #image devient parent du painter
         painter = QPainter(image)
         painter.set_pen(Qt.NoPen)
         painter.set_brush(QColor(39, 45, 46))
@@ -314,5 +301,4 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
             self.__draw_shapes(painter)
         
         painter.end()
-        pass
 
