@@ -164,7 +164,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             pop_final = (couples_finales  * self.__probabilites_procreation)*2
             # trouve la somme pour chaque couleur
             pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
-
             
             # un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int
             # on redistribue les individues perdu aux yeux combos
@@ -172,8 +171,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             pop_final[1] += reste
             pop_yeux = pop_final
             pop_gen = np.sum(pop_final)
-    
-
+            
         pourcentage_bleu = pop_yeux[2]/pop_gen  
         pourcentage_brun = pop_yeux[0]/pop_gen
         pourcentage_combo = pop_yeux[1]/pop_gen
@@ -186,12 +184,10 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__results = np.vstack((self.__results, chromosome))
         self.__scores = np.append(self.__scores, score)
         return score
-     
+    
     def display_panel(self):
-        
         centre_layout = QVBoxLayout(self)
         
-        #param
         param_group_box = QGroupBox('Informations')
         param_layout = QFormLayout(param_group_box)
 
@@ -202,8 +198,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self._value_pop_bleu_sb.valueChanged.connect(self.update_purete_bleu)
         self._value_pop_brun_sb.valueChanged.connect(self.update_purete_brun)
         self._value_pop_combo_sb.valueChanged.connect(self.update_purete_combo)
-
-        #à modifier avce les values du canvas
         
         self.__color_mapping = {
                 (0, 10): (128,0,0),
@@ -216,7 +210,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
                 (70, 80): (60,179,113), 
                 (80, 90): (34,139,34),
                 (90, 100): (128,128,0)}
-        
         
         icon_size = 15
         info_layout = QHBoxLayout()
@@ -293,7 +286,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     def update_purete_bleu(self):
         self.pop_bleu  = self._value_pop_bleu_sb.value
         self.update_population_initial()
- 
+
     @Slot()
     def update_purete_brun(self):
         self.pop_brun  = self._value_pop_brun_sb.value
@@ -322,7 +315,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     def update_yeux(self, label, pourcentage, nom):
         label.text = nom+": "+str(round(pourcentage,2))+"%"
         
-
     def __set_icon(self, label, percentage):
         pixmap = QPixmap(label.size)
         
@@ -380,7 +372,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
         painter.restore()
         pass
-         
+    
     def _draw_charts_grid(self,painter,size, sorted_results):
         painter.save()
         
@@ -393,7 +385,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             cells_pair = True
 
 
-       # Calculate the number of squares along one dimension
+        # Calculate the number of squares along one dimension
         cols = math.ceil(math.sqrt(cells_quantity))
         rows = math.ceil(cells_quantity / cols)
 

@@ -55,7 +55,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
                 QPointF(0.25,-0.25),
                 QPointF(0,-1),
                 QPointF(-0.25,-0.25)],
-        "Hexagon":[QPointF(-1,-0.5),
+        "Octogon":[QPointF(-1,-0.5),
                    QPointF(-1,0.5),
                    QPointF(-0.5,1),
                    QPointF(0.5,1),
@@ -64,16 +64,8 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
                    QPointF(0.5,-1),
                    QPointF(-0.5,-1)]
         }
-        
-        # self.__shape_map = {
-        # "Triangle":lambda "Triangle" :  self.__create_shape("Triangle"),
-        # "Square":self.__create_shape("Square"),
-        # "Star":self.__create_shape("Star"),
-        # "Hexagon":self.__create_shape("Hexagon")
-        # }
-        
+
         self.__create_shape(self.__shape_selection.current_text)
-        #self.__shape_map[self.__shape_selection.current_text]()
         self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
     
     @property
@@ -141,43 +133,14 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         for i in range(len(self.__shapes_points[key])):
             self.__polygon.append(self.__shapes_points[key][i])
         self.__shape_points_count = len(self.__shapes_points[key])
-
-    def __create_square(self):
-        self.__polygon.clear()
-        for i in range(len(self.__shapes_points["Square"])):
-            self.__polygon.append(self.__shapes_points["Square"][i])
-        self.__shape_points_count = 4
-
-    def __create_triangle(self):
-        self.__polygon.clear()
-        for i in range(len(self.__shapes_points["Triangle"])):
-            self.__polygon.append(self.__shapes_points["Triangle"][i])
-        self.__shape_points_count = 3
-
-    def __create_hexagon(self):
-        self.__polygon.clear()
-        for i in range(len(self.__shapes_points["Hexagon"])):
-            self.__polygon.append(self.__shapes_points["Hexagon"][i])
-        self.__shape_points_count = 8
-
-    def __create_star(self):
-        self.__polygon.clear()
-        for i in range(len(self.__shapes_points["Star"])):
-            self.__polygon.append(self.__shapes_points["Star"][i])
-        self.__shape_points_count = 8
-        
-
     
     def __populate_nuage(self):
         for _ in range(self.__point_quantity):
             self.__nuage_point.append(QPointF(self.__rng.uniform(0,self.__canvas.width()),self.__rng.uniform(0,self.__canvas.height())))
     
     def __display_panel(self):
-        
-        
         centre_layout = QVBoxLayout(self)
         
-        #param
         param_group_box = QGroupBox('Parameters')
         param_layout = QFormLayout(param_group_box)
 
@@ -191,7 +154,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
 
         self.__shape_selection = QComboBox()
         
-        shapes = ['Triangle','Square','Star','Hexagon']
+        shapes = ['Triangle','Square','Star','Octogon']
         for i in shapes:
             self.__shape_selection.add_item(i)
             
@@ -272,7 +235,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
                               p.y(),
                               self.__obstacle_size,
                               self.__obstacle_size)
-            
         painter.restore()
     
     def __draw_shapes(self, painter):
