@@ -23,8 +23,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
-        #pour les tests on cree un carre
-        # self.create_triangle()
 
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
 
@@ -35,7 +33,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__point_quantity = 70
 
         self.__nuage_point = []
-        # a connecter au scroller du GUI
         self.populate_nuage()
 
         
@@ -51,12 +48,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.shape_map[self.shape_selection.current_text]()
         self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
 
-
-        # # peut-etre remettre un array normal pour le nuage de points
-        # self.__nuage_point = np.empty((20, 2))
-        # # pour les tests...
-        # self.__nuage_point[:,0] = self.__rng.uniform(0,self.__canvas.width())
-        # self.__nuage_point[:,1] = self.__rng.uniform(0,self.__canvas.height())
     
     
     @property
@@ -84,7 +75,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     @property
     def default_parameters(self) -> Parameters:
  
-        #a remplacer
         engine_parameters = Parameters()
         engine_parameters.maximum_epoch = 100
         engine_parameters.population_size = 20
@@ -103,20 +93,15 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         scaling = chromosome[3]
         
         transform = QTransform()
-        # transform prend les translations, rotation, scaling
-        #transform sur le Polygon
         transform.translate(translation_x, translation_y)
         transform.rotate(rotation)
         transform.scale(scaling, scaling)
         polygon_transformed = transform.map(self.__polygon)
         area = 0
-        # canvas.contains (polygon.boundingRect) si vrai return point 0
+       
         if not self.__canvas.contains(polygon_transformed.bounding_rect()):
-            return area
-        
-        
-        # polygon.containsPoint(nuage_points[:]) si vrai return point 0
-        #range
+            return area 
+      
         for i in range(self.__point_quantity):
             if polygon_transformed.contains_point(self.__nuage_point[i],Qt.OddEvenFill):
                 return area
@@ -198,14 +183,12 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
             self.shape_selection.add_item(i)
             
         self.shape_selection.currentTextChanged.connect(self.choose_shape)
-        #à modifier avce les values du canvas
         size_label = QLabel(str(int(self.__canvas.width())) + ' x ' + str(int(self.__canvas.height()))) 
         param_layout.add_row('Canvas size', size_label)
         param_layout.add_row('Obstacle count:', obstacle_layout)
         param_layout.add_row('Shape:', self.shape_selection)
         param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
-        #visualization
         visualization_group_box = QGroupBox('Visualization')
         visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         visualization_layout = QGridLayout(visualization_group_box)
@@ -251,9 +234,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self._box_visualization_ratio = 0.9
         return painter
         
-    
-        
-        
+      
         
     
     @property
@@ -293,7 +274,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     def _draw_shapes(self, painter):
         painter.save()
         painter.set_brush(QColor(100, 0, 255))
-        #sort du plus grand au plus petit
         indexes = np.argsort(self.__areas, axis=0)[::-1]
         sorted_shapes = self.__shapes[indexes]
 
@@ -301,23 +281,17 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         painter.set_brush(Qt.NoBrush)
         painter.set_pen(QColor(10, 255, 100))
        
-        #numpy me ?
         for i in range(sorted_shapes.shape[0]):
             painter.draw_polygon(QPolygonF(sorted_shapes[i]))
    
         self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
         self.__areas = np.empty(0, dtype=float)
         painter.restore()
-        #flush le tableau
         pass
 
     def _update_from_simulation(self, ga : GeneticAlgorithm | None) -> None:
 
-        #Qpainter
-        #crée un image de la grosseur du visualization+box
         image = QImage(QSize(500, 250), QImage.Format_ARGB32)
-        # image.fill( QColor(255, 255, 255))
-        #image devient parent du painter
         painter = QPainter(image)
         painter.set_pen(Qt.NoPen)
         painter.set_brush(QColor(39, 45, 46))
