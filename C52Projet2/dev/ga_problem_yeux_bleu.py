@@ -103,83 +103,81 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         pop_yeux = np.array([self.pop_brun, self.pop_combo, self.pop_bleu], dtype=np.uint32)
         for _ in range(self.__annee):
-
-            couples_finales = np.zeros(6, dtype=np.uint32)
+            # pop_yeux = np.array([pop_brun, pop_combo, pop_bleu], dtype=np.uint8)
+            couples_finales = np.zeros(6, dtype=np.uint16)
             
             #retirer les impaires
             reste = pop_yeux % 2
             pop_yeux = pop_yeux - reste
-
-            # faire tout les couples pure potentiels pour ensuite garder un % selon le chromosone
+            # faire couples  et apres, couples pures avec % purete; dtype assure le math.floor
             couples = pop_yeux / 2
-            couples_pures = np.array(couples * chromosome, dtype=np.uint32)
+            couples_pures = np.array(couples * chromosome, dtype=np.uint16)
             couples_finales[:3] = couples_pures
             
-            # revenir a pop_yeux: faire nos couples diverse (non-pure)
+            # revenir avec la population non accouplé
             couples = couples - couples_pures
             pop_yeux = couples * 2
 
             # couples mixtes:
-            couples_combo = np.zeros(3, dtype=np.uint32)
+            # 1- sort la population restante en odre du plus petit au plus grand restant
+            # 2- la couleur de yeux la plus petites sera divisé en 2 et accouplé avec les 2 autres couleurs restantes
+            # 3- la couleur de yeux suivant la plus petite sera accouplé au complet avec la couleure restante
+            # 4- la couleur avec le plus grand nombre d'individus pourrait avoir personne avec qui s'accomplé, elle s'accomplera avec elle-meme dans ce cas 
+            couples_combo = np.zeros(3, dtype=np.uint16)
             
-            
+            #1.
             sorted_pop_yeux = np.argsort(pop_yeux)
+            premiere_couleur = sorted_pop_yeux[0]
+            deuxieme_couleur = sorted_pop_yeux[1]
+            troisieme_couleur = sorted_pop_yeux[2]
+
+            #2.
+            mask = pop_yeux != pop_yeux[premiere_couleur]
+            nouveaux_couples_mixtes = pop_yeux[premiere_couleur]/2
+            pop_yeux[mask] = pop_yeux[mask] - nouveaux_couples_mixtes
+            couples_combo[mask] = nouveaux_couples_mixtes
+            pop_yeux[premiere_couleur] = 0
+            couples_combo[premiere_couleur] = pop_yeux[deuxieme_couleur]
+
+            #3.
+            pop_yeux[mask] = pop_yeux[mask] - pop_yeux[deuxieme_couleur]
+            pop_yeux[deuxieme_couleur] = 0
             
-            premier = sorted_pop_yeux[0]
-            deuxieme = sorted_pop_yeux[1]
-            troisieme = sorted_pop_yeux[2]
-            # individus_premier = pop_yeux[premier]/2
-            # mask: avoir true quand c'est les gens a coupler
-            mask = pop_yeux != pop_yeux[premier]
-            #faire soustraction juste sur les elements qui sont true (donc pas les gens les moins nombreux)
-            pop_yeux[mask] = pop_yeux[mask] - pop_yeux[premier]/2
-            couples_combo[mask] = pop_yeux[premier]/2
-            
-            #  mtn vider le moins nombreux
-            pop_yeux[premier] = 0
-        
-            couples_combo[premier] = pop_yeux[deuxieme]
-            
-            pop_yeux[mask] = pop_yeux[mask] - pop_yeux[deuxieme]
-            pop_yeux[deuxieme] = 0
-            couples_finales[troisieme] = couples_finales[troisieme] + pop_yeux[troisieme] / 2
-            
+            #4.
+            couples_finales[troisieme_couleur] = couples_finales[troisieme_couleur] + pop_yeux[troisieme_couleur] / 2
+    
             couples_finales[3:] = couples_combo
             
-
+            # les restants (ceux retiré pour avoir des chiffres paires)
+            # le tableau sera soit [0,0,0] soit une combinaison [1,1,0], [1,0,1], [0,1,1]
+            # 1. trouver la valeur décimal de chaque combinaison
+            # 2. à l'aide de la table '__lookup_table_reste' chaque valeur décimal est lié à l'index d'un couple combo de la table couples_finales
+            # 3. ajoute 1 couple à l'index trouvé 
             if np.sum(reste) > 0:
-                # convertie l'array reste(un array binaire) en sa valeur decimal
+
                 decimal_number = np.packbits(np.flip(reste), bitorder='little')
-            
-                # np where retourne tuple avec array: [index ou la comparaison est vraie, type de variable]
                 index_lookup = np.where(self.__lookup_table_reste[0] == decimal_number[0])[0][0]
-                
                 index_combo = self.__lookup_table_reste[1, index_lookup]
                 couples_finales[index_combo] = couples_finales[index_combo] + 1 
-            # ---------------------------------------------
-            # taux de croissance?
-            # couples_finales + self.croissance_hard()
+
+            # multiplie les couples à la charte de probabiltes, *2 pour avoir la nouvelle pop
             pop_final = (couples_finales  * self.__probabilites_procreation)*2
-            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint32)
-            # update le nombre total de population
-            #ajouter le surplus au combo_brun (un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int)
-            accouple = np.sum(pop_final)
-            reste = pop_gen - accouple
-            pop_final[1] += reste # ajouter reste au combo
+            # trouve la somme pour chaque couleur
+            pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
+
+            
+            # un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int
+            # on redistribue les individues perdu aux yeux combos
+            reste = pop_gen - np.sum(pop_final)
+            pop_final[1] += reste
             pop_yeux = pop_final
             pop_gen = np.sum(pop_final)
     
-            
-    
-        # pourcentage_finale = pop_yeux[2]/pop_gen   
-        # score = 1 - abs(pourcentage_finale-0.50)
-        
+
         pourcentage_bleu = pop_yeux[2]/pop_gen  
         pourcentage_brun = pop_yeux[0]/pop_gen
         pourcentage_combo = pop_yeux[1]/pop_gen
-        
-        # NOTES: slider pour user pour changer le score (33%-33%-33% ou 50%-50% ou etc ... )
-        # taux de croissance manque
+
         score = ((pourcentage_bleu-0.33)**2 + (pourcentage_brun - 0.33)**2 + (pourcentage_combo-0.33)**2)**0.5
         score = 1 - score
 
@@ -187,25 +185,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__results_pourcentage = np.vstack((self.__results_pourcentage, liste_pourcentages_yeux))
         self.__results = np.vstack((self.__results, chromosome))
         self.__scores = np.append(self.__scores, score)
-        # print("---")
-        # print("brun: ","%7.0f" % self.__population_brun,"| combo","%7.0f" % self.__population_combo,"| bleu","%7.0f" % self.__population_bleu, "| pop_gen:","%7.0f" %pop_gen)
-        # print("brun: ","%7.4f" % chromosome[0],"| combo","%7.4f" % chromosome[1],"| bleu","%7.4f" % chromosome[2], "|")
-        # print("brun: ","%7.0f" % pop_yeux[0],"| combo","%7.0f" %pop_yeux[1],"| bleu", "%7.0f" %pop_yeux[2], "|")
-        # print("brun: ","%7.3f" % pourcentage_brun,"| combo","%7.3f" % pourcentage_combo,"| bleu","%7.3f" % pourcentage_bleu, "| score:","%7.7f" %score)
         return score
-  
-    
-    # def croissance_couples(self):
-    #     rng = np.random.default_rng()
-    #     croissance = rng.integers(1, 6, size=6)
-    #     return croissance
-    
-    # def croissance_hard(self):
-    #     array = np.array([3,2,2,1,1,1])
-    #     np.random.shuffle(array)
-    #     return array
-        
-    
+     
     def display_panel(self):
         
         centre_layout = QVBoxLayout(self)
@@ -399,10 +380,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
         painter.restore()
         pass
-        
-        
-        
-        
+         
     def _draw_charts_grid(self,painter,size, sorted_results):
         painter.save()
         
