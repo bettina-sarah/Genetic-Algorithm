@@ -1,7 +1,6 @@
 
 import sys
 
-
 from gaapp import QGAApp
 
 from ga_strategy_genes_mutation import GenesMutationStrategy, GenesMutationStrategyWithoutScaling, GeneralGenesMutationStrategy, GeneralMultiMutationStrategy, ShapeOptimizedMutationStrategy, ShapeOptimizerLocalAllGenesMutationStrategy

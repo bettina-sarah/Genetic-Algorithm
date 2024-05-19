@@ -30,7 +30,7 @@ class GenesMutationStrategyWithoutScaling(MutationStrategy):
     """
     
     def __init__(self) -> None:
-        super().__init__('Shape Optimizer: All Genes Witout Scaling')
+        super().__init__('Shape Optimizer: All Genes Without Scaling')
 
     def mutate(self, offsprings : NDArray, mutation_rate : float, domains : Domains) -> None:
         def do_mutation(offspring, mutation_rate, domains):
@@ -70,7 +70,7 @@ class ShapeOptimizerLocalAllGenesMutationStrategy(MutationStrategy):
 class ShapeOptimizedMutationStrategy(MutationStrategy):
     
     def __init__(self) -> None:
-        super().__init__('Shape Optimiser: Optimized Mutation')
+        super().__init__('Shape Optimizer: Combined Optimized Mutation')
         self.__mutation1 = GeneMutationStrategy() 
         self.__mutation2 = GenesMutationStrategyWithoutScaling() 
         self.__mutation3 = ShapeOptimizerLocalAllGenesMutationStrategy()

@@ -1,12 +1,10 @@
 import numpy as np
 from numpy.typing import NDArray
 import math
-import random
 
 from gacvm import Domains, ProblemDefinition, Parameters, GeneticAlgorithm
 from gaapp import QSolutionToSolvePanel
 
-from uqtgui import process_area
 from uqtwidgets import QImageViewer, create_scroll_int_value
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
@@ -15,12 +13,18 @@ from PySide6.QtCore import Slot, Qt, QSize, QRectF
 
 from __feature__ import snake_case, true_property
 
+"""
+Ce fichier contient la classe QEyeProblemPanel qui définit les taux de pureté des couples en fonction de leur couleur des yeux et leur genotype oculaire, afin d'arriver a un équilibre entre les genotypes (33-33-33).
+Membres d'équipe: Francois Bouchard, Vincent Fournier, Gabriel Gorry, Bettina-Sarah Janesch
+Date de création: 14 mai 2024
+"""
+
 class QEyeProblemPanel(QSolutionToSolvePanel):
     
     def __init__(self, width : int = 10., height : int = 5., parent : QWidget | None = None) -> None:
         super().__init__(parent)
     
-        self.display_panel()
+        self.__display_panel()
         
         self.__canvas = QRectF(0,0,1500,500)
         self.__annee = 20
@@ -39,13 +43,14 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__population_combo  = self._value_pop_combo_sb.value
         self.__population_bleu   = self._value_pop_bleu_sb.value
         
-        self.__colors = (QColor(0,0,255),
-                         QColor(245,213,162),
-                         QColor(165,42,42))
-        
+        self.__colors = (QColor(102,51,0),
+                         QColor(212,187,137),
+                         QColor(51,153,255))
+        # QColor(8,151,157)
         self.__results = np.empty((0,3),dtype=np.float32)
         self.__scores = np.empty(0,dtype=np.float32)
         self.__results_pourcentage = np.empty((0,3),dtype=np.float64)
+        self.__update_population_initial()
         
 
     @property
@@ -55,15 +60,16 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
     @property
     def name(self) -> str: # note : override
-        return 'Problème d’optimisation de pureté de couple dans une population'
+        return 'Eye Color Gene Distribution'
 
     @property
     def summary(self) -> str: # note : override
-        return '''On cherche à trouver la balance parfaite des taux de pureté de couple permettant d'obtenir une balance entre les trois pairs de couleurs de yeux possible après un certain nombre d'année'''
+        return '''On cherche à trouver la balance parfaite des taux de pureté de couple permettant d'obtenir un équilibre entre les trois pairs de couleurs oculaires possibles après 20 générations d'individus. '''
+    
 
     @property
     def description(self) -> str: # note : override
-        return '''On cherche à trouver les taux de pureté de couple néccessaire pour obtenir ce qui se rapproche le plus d'une balance de population entre les 3 paires de yeux après qu'un certain nombre d'année ai passé'''
+        return '''On cherche à trouver les taux de pureté des couples en fonction de leur couleur des yeux et leur genotype oculaire, afin d'arriver le plus près à un équilibre entre les génotypes (33-33-33), après 20 générations. Cela se fait en fonction des probabilités de procréation de chaque couple possible entre des individus de toutes les variétés génétiques oculaires (plus notamment, le gène des yeux bleux, le gène des yeux bruns et la combinaison entre les deux). Le score est calculé selon la distance de chaque pourcentage (individus avec un génotype spécifique) de 33%, et ce, après 20 générations. '''
 
     @property
     def pop_brun(self):
@@ -182,10 +188,18 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__scores = np.append(self.__scores, score)
         return score
     
-    def display_panel(self):
+    def __display_panel(self):
         centre_layout = QVBoxLayout(self)
-
-        param_group_box = QGroupBox('Informations')
+        
+        self.__color_mapping = {
+            (0, 15): (255,0,0),
+            (16, 26): (255,255,0), 
+            (27, 36): (0,255,0),
+            (37, 50): (255,255,0),
+            (51, 99): (255,0,0)}
+        
+        param_group_box = QGroupBox()
+        param_group_box.resize(100,5)
         param_layout = QFormLayout(param_group_box)
 
         self._value_pop_bleu_sb, pop_bleu_layout = create_scroll_int_value(100,500,1000,"")
@@ -196,47 +210,27 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self._value_pop_brun_sb.valueChanged.connect(self.update_purete_brun)
         self._value_pop_combo_sb.valueChanged.connect(self.update_purete_combo)
         
-        self.__color_mapping = {
-                (0, 10): (128,0,0),
-                (10, 20): (178,34,34),   
-                (20, 30): (255,0,0),  
-                (30, 40): (255,140,0), 
-                (40, 50): (255,215,0),  
-                (50, 60): (173,255,47), 
-                (60, 70): (50,205,50),  
-                (70, 80): (60,179,113), 
-                (80, 90): (34,139,34),
-                (90, 100): (128,128,0)}
-        
-        icon_size = 15
+
+        self.__icon_size = 15
         info_layout = QHBoxLayout()
 
-        # DONT REPEAT YOURSELF LMFAO <---------------------------------- 
         self.__pourcentage_brun_initial = 0
         self.__pourcentage_combo_initial = 0
         self.__pourcentage_bleu_initial = 0
         self.__population_initial = 0
-        self.__brun_icon = QLabel()
-        self.__brun_icon.set_fixed_width(icon_size)
-        self.__brun_icon.set_fixed_height(icon_size)
-        self.__brun_pourcentage = QLabel('Brun 33%')
-        self.__combo_icon = QLabel()
-        self.__combo_icon.set_fixed_width(icon_size)
-        self.__combo_icon.set_fixed_height(icon_size)
-        self.__combo_pourcentage = QLabel('Combo 33%')
-        self.__bleu_icon = QLabel()
-        self.__bleu_icon.set_fixed_width(icon_size)
-        self.__bleu_icon.set_fixed_height(icon_size)
-        self.__bleu_pourcentage = QLabel('Bleu 34%')
-        self.__pop_total = QLabel('pop total: 900')
-        
-        self.__brun_pourcentage.set_fixed_width(100)
-        self.__combo_pourcentage.set_fixed_width(100)
-        self.__bleu_pourcentage.set_fixed_width(100)
 
-        # DONT REPEAT YOURSELF LMFAO <----------------------------------
+
+
+    # size, title, return 2x label
+        self.__brun_icon, self.__brun_pourcentage = self.__create_icon('Brun 33%')
+        self.__combo_icon, self.__combo_pourcentage = self.__create_icon('Combo 33%')
+        self.__bleu_icon, self.__bleu_pourcentage = self.__create_icon('Bleu 34%')
+
+        self.__pop_total = QLabel('pop total: 900')
         self.__pop_total.set_fixed_width(100)
         
+        info_box = QGroupBox()
+
         info_layout.add_widget(self.__brun_icon)
         info_layout.add_widget(self.__brun_pourcentage)
         info_layout.add_widget(self.__combo_icon)
@@ -244,8 +238,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         info_layout.add_widget(self.__bleu_icon)
         info_layout.add_widget(self.__bleu_pourcentage)
         info_layout.add_widget(self.__pop_total)
-        
-        param_layout.add_row('Information: ', info_layout)
+        info_box.set_layout(info_layout)
+
+        param_layout.add_row('Informations: ', info_box)
         param_layout.add_row('Population brun:', pop_brun_layout)
         param_layout.add_row('Population combo:', pop_combo_layout)
         param_layout.add_row('Population bleu:', pop_bleu_layout)
@@ -259,9 +254,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self._visualization_widget = QImageViewer(True)
         self._visualization_layout.add_widget(self._visualization_widget)
 
-        # DONT REPEAT YOURSELF LMFAO <----------------------------------
-
-        # DONT REPEAT YOURSELF LMFAO <----------------------------------
         #Meilleurs pourcentages display
         meilleurs_pourcentages = QGroupBox()
         meilleurs_pourcentages.resize(100,5)
@@ -275,17 +267,14 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         meilleurs_pourcentages.set_layout(pourcentages_pop_meilleure_solution)
         param_layout.add_row("Pourcentages: ", meilleurs_pourcentages)
 
-        # DONT REPEAT YOURSELF LMFAO <----------------------------------
-
         centre_layout.add_widget(param_group_box)
-        # centre_layout.add_widget(meilleurs_pourcentages)
         centre_layout.add_widget(visualization_group_box)
         pass
     
     @Slot()
     def update_purete_bleu(self):
         self.pop_bleu  = self._value_pop_bleu_sb.value
-        self.update_population_initial()
+        self.__update_population_initial()
 
     @Slot()
     def update_purete_brun(self):
@@ -296,6 +285,15 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     def update_purete_combo(self):
         self.pop_combo  = self._value_pop_combo_sb.value
         self.__update_population_initial()
+
+    def __create_icon(self, title):
+        icon_label = QLabel()
+        icon_label.set_fixed_width(self.__icon_size)
+        icon_label.set_fixed_height(self.__icon_size)
+        pourcentage_label = QLabel(title)
+        pourcentage_label.set_fixed_width(100)
+        return icon_label, pourcentage_label
+
         
     def __update_population_initial(self):
         self.__population_initial = self.__population_brun + self.__population_combo + self.__population_bleu
@@ -349,7 +347,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     def _draw_chart(self,painter,solution,position, index):
         x,y,width,height = position
         painter.save()
-        painter.set_brush(QColor(0,0,0))
+        painter.set_brush(QColor(255,255,255))
         outer_rect = QRectF(x,y,width,height)
         painter.draw_rect(outer_rect)
         
@@ -362,7 +360,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             painter.draw_rect(inner_rect)
         
         if index == 0:
-            yellow_pen = QPen(QColor(255, 255, 0)) 
+            yellow_pen = QPen(QColor(138,201,74))
             yellow_pen.set_width(20)
             painter.set_brush(Qt.NoBrush)
             painter.set_pen(yellow_pen)
@@ -436,8 +434,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             sorted_results_pourcentage = self.__results_pourcentage[indexes]
             self._draw_charts_grid(painter,size, sorted_results)
             painter.end()
-            self.__pourcentage_bleu_final.text = "% Bleus: " + str(round(sorted_results_pourcentage[0][0],2))
-            self.__pourcentage_brun_final.text = "% Bruns: " + str(round(sorted_results_pourcentage[0][1],2))
-            self.__pourcentage_combo_final.text = "% Combos: " + str(round(sorted_results_pourcentage[0][2],2))
+            self.__pourcentage_bleu_final.text = "Bleus: " + str(round(sorted_results_pourcentage[0][0],2)) + " %"
+            self.__pourcentage_brun_final.text = "Bruns: " + str(round(sorted_results_pourcentage[0][1],2)) + " %"
+            self.__pourcentage_combo_final.text = "Combos: " + str(round(sorted_results_pourcentage[0][2],2)) + " %"
         else:
             painter.end()

@@ -13,13 +13,23 @@ from PySide6.QtCore import Slot, Qt, QSize, QPointF, QRectF, Signal
 
 from __feature__ import snake_case, true_property
 
+
+
+
+"""
+Ce fichier contient la classe QShapeProblemPanel qui définit, pour une forme choisi, la plus grande aire possible, en fonction des obstacles.
+Membres d'équipe: Francois Bouchard, Vincent Fournier, Gabriel Gorry, Bettina-Sarah Janesch
+Date de création: 9 mai 2024
+"""
+
 class QShapeProblemPanel(QSolutionToSolvePanel):
+    
+
     
     obstacle_count_changed = Signal(int)
     
     def __init__(self, width : int = 10., height : int = 5., parent : QWidget | None = None) -> None:
         super().__init__(parent)
-        
         
         self.__canvas = QRectF(0,0,500,250)
         self.__polygon = QPolygonF()
@@ -76,7 +86,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     @property
     def name(self) -> str: # note : override
         """Nom du problème."""
-        return 'Problème d’optimisation géométrique'
+        return 'Shape optimizer'
 
     @property
     def summary(self) -> str: # note : override
@@ -86,7 +96,7 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     @property
     def description(self) -> str: # note : override
         """Description du problème."""
-        return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
+        return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle, et ce, en calculant leur score en fonction de leur aire. '''
     
     
     @property
