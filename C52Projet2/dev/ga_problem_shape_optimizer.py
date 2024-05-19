@@ -33,7 +33,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__point_quantity = 70
 
         self.__nuage_point = []
-        # a connecter au scroller du GUI
         self.__populate_nuage()
 
         
@@ -146,46 +145,24 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon.clear()
         for i in range(len(self.__shapes_points["Square"])):
             self.__polygon.append(self.__shapes_points["Square"][i])
-        # self.__polygon.append(QPointF(-1,-1))
-        # self.__polygon.append(QPointF(1,-1))
-        # self.__polygon.append(QPointF(1,1))
-        # self.__polygon.append(QPointF(-1,1))
         self.__shape_points_count = 4
 
     def __create_triangle(self):
         self.__polygon.clear()
         for i in range(len(self.__shapes_points["Triangle"])):
             self.__polygon.append(self.__shapes_points["Triangle"][i])
-        # self.__polygon.append(QPointF(-1,-1))
-        # self.__polygon.append(QPointF(1,-1))
-        # self.__polygon.append(QPointF(0,1))
         self.__shape_points_count = 3
 
     def __create_hexagon(self):
+        self.__polygon.clear()
         for i in range(len(self.__shapes_points["Hexagon"])):
             self.__polygon.append(self.__shapes_points["Hexagon"][i])
-        # self.__polygon.append(QPointF(-1,-0.5))
-        # self.__polygon.append(QPointF(-1,0.5))
-        # self.__polygon.append(QPointF(-0.5,1))
-        # self.__polygon.append(QPointF(0.5,1))
-        # self.__polygon.append(QPointF(1,0.5))
-        # self.__polygon.append(QPointF(1,-0.5))
-        # self.__polygon.append(QPointF(0.5,-1))
-        # self.__polygon.append(QPointF(-0.5,-1))
         self.__shape_points_count = 8
 
     def __create_star(self):
         self.__polygon.clear()
         for i in range(len(self.__shapes_points["Star"])):
             self.__polygon.append(self.__shapes_points["Star"][i])
-        # self.__polygon.append(QPointF(-1,0))
-        # self.__polygon.append(QPointF(-0.25,0.25))
-        # self.__polygon.append(QPointF(0,1))
-        # self.__polygon.append(QPointF(0.25,0.25))
-        # self.__polygon.append(QPointF(1,0))
-        # self.__polygon.append(QPointF(0.25,-0.25))
-        # self.__polygon.append(QPointF(0,-1))
-        # self.__polygon.append(QPointF(-0.25,-0.25))
         self.__shape_points_count = 8
         
 
@@ -324,7 +301,6 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         #Qpainter
         #crée un image de la grosseur du visualization+box
         image = QImage(QSize(500, 250), QImage.Format_ARGB32)
-        # image.fill( QColor(255, 255, 255))
         #image devient parent du painter
         painter = QPainter(image)
         painter.set_pen(Qt.NoPen)
