@@ -73,17 +73,17 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
     @property
     def name(self) -> str: # note : override
-        return 'Problème d’optimisation de pureté de couple de population'
+        return 'Problème d’optimisation de pureté de couple dans une population'
 
     @property
     def summary(self) -> str: # note : override
-        return '''On cherche à trouver la balance parfaite  permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
+        return '''On cherche à trouver la balance parfaite des taux de pureté de couple permettant d'obtenir une balance entre les trois pairs de couleurs de yeux possible après un certain nombre d'année'''
 
     @property
     def description(self) -> str: # note : override
-        return '''On cherche à trouver la transformation géométrique permettant de disposer la plus grande forme géométrique sur une surface parsemée d’obstacle.'''
-  
-  
+        return '''On cherche à trouver les taux de pureté de couple néccessaire pour obtenir ce qui se rapproche le plus d'une balance de population entre les 3 paires de yeux après qu'un certain nombre d'année ai passé'''
+
+
     def __call__(self, chromosome : NDArray) -> float:
         """Retourne le volume de la boîte obtenue en fonction de la taille de la découpe."""
         
