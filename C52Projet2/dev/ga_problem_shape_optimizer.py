@@ -25,10 +25,13 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__polygon = QPolygonF()
         #pour les tests on cree un carre
         # self.create_triangle()
-
+        self.__translation_x 
+        self.__translation_y
+        self.__rotation 
+        self.__scaling
         self.__max_scaling = min(self.__canvas.width(),self.__canvas.height()) / 2
 
-        self.display_panel()
+        self.__display_panel()
         self.__obstacle_size = 4
 
         self.__rng = np.random.default_rng()
@@ -36,19 +39,19 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
 
         self.__nuage_point = []
         # a connecter au scroller du GUI
-        self.populate_nuage()
+        self.__populate_nuage()
 
         
         self.__areas = np.empty(0, dtype=float)
         
-        self.shape_map = {
-        "Triangle":self.create_triangle,
-        "Square":self.create_square,
-        "Star":self.create_star,
-        "Hexagon":self.create_hexagon
+        self.__shape_map = {
+        "Triangle":create_triangle,
+        "Square":create_square,
+        "Star":create_star,
+        "Hexagon":create_hexagon
         }
         
-        self.shape_map[self.shape_selection.current_text]()
+        self.__shape_map[self.__shape_selection.current_text]()
         self.__shapes = np.empty((0,self.__shape_points_count), dtype=QPolygonF)
 
 
@@ -97,10 +100,10 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     def __call__(self, chromosome : NDArray) -> float:
         """Retourne le volume de la boîte obtenue en fonction de la taille de la découpe."""
         
-        translation_x = chromosome[0]
-        translation_y = chromosome[1]
-        rotation = chromosome[2]
-        scaling = chromosome[3]
+        self.__translation_x = chromosome[0]
+        self.__translation_y = chromosome[1]
+        self.__rotation = chromosome[2]
+        self.__scaling = chromosome[3]
         
         transform = QTransform()
         # transform prend les translations, rotation, scaling
