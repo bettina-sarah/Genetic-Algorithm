@@ -12,7 +12,6 @@ from uqtwidgets import QImageViewer, create_scroll_int_value
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFormLayout, QGroupBox, QGridLayout, QSizePolicy
 from PySide6.QtGui import QImage, QPainter, QColor, QPen, QPixmap
 from PySide6.QtCore import Slot, Qt, QSize, QRectF
-from PySide6.QtCharts import QChartView
 
 from __feature__ import snake_case, true_property
 
@@ -154,7 +153,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             # 2. à l'aide de la table '__lookup_table_reste' chaque valeur décimal est lié à l'index d'un couple combo de la table couples_finales
             # 3. ajoute 1 couple à l'index trouvé 
             if np.sum(reste) > 0:
-
                 decimal_number = np.packbits(np.flip(reste), bitorder='little')
                 index_lookup = np.where(self.__lookup_table_reste[0] == decimal_number[0])[0][0]
                 index_combo = self.__lookup_table_reste[1, index_lookup]
@@ -164,7 +162,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
             pop_final = (couples_finales  * self.__probabilites_procreation)*2
             # trouve la somme pour chaque couleur
             pop_final = np.array(np.sum(pop_final, axis=1), dtype=np.uint16)
-            
             # un surplus arrive lorsque *__probabilites_procreation donne un .5, mais l'array est en int
             # on redistribue les individues perdu aux yeux combos
             reste = pop_gen - np.sum(pop_final)
@@ -187,7 +184,7 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     
     def display_panel(self):
         centre_layout = QVBoxLayout(self)
-        
+
         param_group_box = QGroupBox('Informations')
         param_layout = QFormLayout(param_group_box)
 
@@ -213,6 +210,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         
         icon_size = 15
         info_layout = QHBoxLayout()
+
+        # DONT REPEAT YOURSELF LMFAO <---------------------------------- 
         self.__pourcentage_brun_initial = 0
         self.__pourcentage_combo_initial = 0
         self.__pourcentage_bleu_initial = 0
@@ -234,11 +233,11 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self.__brun_pourcentage.set_fixed_width(100)
         self.__combo_pourcentage.set_fixed_width(100)
         self.__bleu_pourcentage.set_fixed_width(100)
+
+        # DONT REPEAT YOURSELF LMFAO <----------------------------------
         self.__pop_total.set_fixed_width(100)
         
-        
         info_layout.add_widget(self.__brun_icon)
-        
         info_layout.add_widget(self.__brun_pourcentage)
         info_layout.add_widget(self.__combo_icon)
         info_layout.add_widget(self.__combo_pourcentage)
@@ -252,8 +251,6 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         param_layout.add_row('Population bleu:', pop_bleu_layout)
         
         param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        
-
 
         #visualization
         visualization_group_box = QGroupBox('Visualization')
@@ -262,8 +259,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         self._visualization_widget = QImageViewer(True)
         self._visualization_layout.add_widget(self._visualization_widget)
 
+        # DONT REPEAT YOURSELF LMFAO <----------------------------------
 
-
+        # DONT REPEAT YOURSELF LMFAO <----------------------------------
         #Meilleurs pourcentages display
         meilleurs_pourcentages = QGroupBox()
         meilleurs_pourcentages.resize(100,5)
@@ -276,6 +274,8 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
         pourcentages_pop_meilleure_solution.add_widget(self.__pourcentage_bleu_final)
         meilleurs_pourcentages.set_layout(pourcentages_pop_meilleure_solution)
         param_layout.add_row("Pourcentages: ", meilleurs_pourcentages)
+
+        # DONT REPEAT YOURSELF LMFAO <----------------------------------
 
         centre_layout.add_widget(param_group_box)
         # centre_layout.add_widget(meilleurs_pourcentages)
@@ -290,30 +290,28 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
     @Slot()
     def update_purete_brun(self):
         self.pop_brun  = self._value_pop_brun_sb.value
-        self.update_population_initial()
+        self.__update_population_initial()
 
     @Slot()
     def update_purete_combo(self):
         self.pop_combo  = self._value_pop_combo_sb.value
-        self.update_population_initial()
+        self.__update_population_initial()
         
-    def update_population_initial(self):
+    def __update_population_initial(self):
         self.__population_initial = self.__population_brun + self.__population_combo + self.__population_bleu
         self.__pourcentage_brun_initial = self.__population_brun/self.__population_initial*100
         self.__pourcentage_combo_initial = self.__population_combo/self.__population_initial*100
         self.__pourcentage_bleu_initial  = self.__population_bleu/self.__population_initial*100
         
-        self.update_yeux(self.__brun_pourcentage, self.__pourcentage_brun_initial, "Brun")
-        self.__set_icon(self.__brun_icon, self.__pourcentage_brun_initial)
-        self.update_yeux(self.__combo_pourcentage, self.__pourcentage_combo_initial, "Combo")
-        self.__set_icon(self.__combo_icon, self.__pourcentage_combo_initial)
-        self.update_yeux(self.__bleu_pourcentage, self.__pourcentage_bleu_initial, "Bleu")
-        self.__set_icon(self.__bleu_icon, self.__pourcentage_bleu_initial)
+        self.__update_yeux(self.__brun_pourcentage,self.__brun_icon ,self.__pourcentage_brun_initial, "Brun")
+        self.__update_yeux(self.__combo_pourcentage,self.__combo_icon, self.__pourcentage_combo_initial, "Combo")
+        self.__update_yeux(self.__bleu_pourcentage, self.__bleu_icon, self.__pourcentage_bleu_initial, "Bleu")
 
         self.__pop_total.text = str(self.__population_initial)+" Individus"
         
-    def update_yeux(self, label, pourcentage, nom):
+    def __update_yeux(self, label, icon, pourcentage, nom):
         label.text = nom+": "+str(round(pourcentage,2))+"%"
+        self.__set_icon(icon, pourcentage)
         
     def __set_icon(self, label, percentage):
         pixmap = QPixmap(label.size)
@@ -400,13 +398,9 @@ class QEyeProblemPanel(QSolutionToSolvePanel):
 
         # Draw the squares
         for i in range(cells_quantity):
-            # if i == cells_quantity and not cells_pair:
-            #    break
             if i == cells_quantity - 1 and not cells_pair:
                  break
-            # elif i == cells_quantity:
-            #     break
-            
+
             row = i // cols
             col = i % cols
             self._draw_chart(painter,sorted_results[i],(col * squareWidth,
