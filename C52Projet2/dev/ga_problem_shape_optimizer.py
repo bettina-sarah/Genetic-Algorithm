@@ -45,10 +45,10 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         self.__areas = np.empty(0, dtype=float)
         
         self.__shape_map = {
-        "Triangle":create_triangle,
-        "Square":create_square,
-        "Star":create_star,
-        "Hexagon":create_hexagon
+        "Triangle":self.create_triangle,
+        "Square":self.create_square,
+        "Star":self.create_star,
+        "Hexagon":self.create_hexagon
         }
         
         self.__shape_map[self.__shape_selection.current_text]()
@@ -108,9 +108,9 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
         transform = QTransform()
         # transform prend les translations, rotation, scaling
         #transform sur le Polygon
-        transform.translate(translation_x, translation_y)
-        transform.rotate(rotation)
-        transform.scale(scaling, scaling)
+        transform.translate(self.__translation_x, self.__translation_y)
+        transform.rotate(self.__rotation)
+        transform.scale(self.__scaling, self.__scaling)
         polygon_transformed = transform.map(self.__polygon)
         area = 0
         # canvas.contains (polygon.boundingRect) si vrai return point 0
@@ -179,49 +179,49 @@ class QShapeProblemPanel(QSolutionToSolvePanel):
     def display_panel(self):
         
         
-        centre_layout = QVBoxLayout(self)
+        self.__centre_layout = QVBoxLayout(self)
         
         #param
-        param_group_box = QGroupBox('Parameters')
-        param_layout = QFormLayout(param_group_box)
+        self.__param_group_box = QGroupBox('Parameters')
+        self.__param_layout = QFormLayout(self.__param_group_box)
 
-        self._value_scroll_bar, obstacle_layout = create_scroll_int_value(0,40,100,"")
-        self._regenerate_button = QPushButton('Regenerate')
-        self._regenerate_button.set_fixed_width(80)
-        obstacle_layout.add_widget(self._regenerate_button)
+        self.__value_scroll_bar, self.__obstacle_layout = create_scroll_int_value(0,40,100,"")
+        self.__regenerate_button = QPushButton('Regenerate')
+        self.__regenerate_button.set_fixed_width(80)
+        self.__obstacle_layout.add_widget(self.__regenerate_button)
         
-        self._value_scroll_bar.valueChanged.connect(self.update_point_quantity)
-        self._regenerate_button.pressed.connect(self.update_nuage)
+        self.__value_scroll_bar.valueChanged.connect(self.update_point_quantity)
+        self.__regenerate_button.pressed.connect(self.update_nuage)
 
         # privé 
-        self.shape_selection = QComboBox()
+        self.__shape_selection = QComboBox()
         
         shapes = ['Triangle','Square','Star','Hexagon']
         for i in shapes:
-            self.shape_selection.add_item(i)
+            self.__shape_selection.add_item(i)
             
-        self.shape_selection.currentTextChanged.connect(self.choose_shape)
+        self.__shape_selection.currentTextChanged.connect(self.choose_shape)
         #à modifier avce les values du canvas
-        size_label = QLabel(str(int(self.__canvas.width())) + ' x ' + str(int(self.__canvas.height()))) 
-        param_layout.add_row('Canvas size', size_label)
-        param_layout.add_row('Obstacle count:', obstacle_layout)
-        param_layout.add_row('Shape:', self.shape_selection)
-        param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.__size_label = QLabel(str(int(self.__canvas.width())) + ' x ' + str(int(self.__canvas.height()))) 
+        self.__param_layout.add_row('Canvas size', self.__size_label)
+        self.__param_layout.add_row('Obstacle count:', self.__obstacle_layout)
+        self.__param_layout.add_row('Shape:', self.__shape_selection)
+        self.__param_group_box.size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         
         #visualization
-        visualization_group_box = QGroupBox('Visualization')
-        visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        visualization_layout = QGridLayout(visualization_group_box)
+        self.__visualization_group_box = QGroupBox('Visualization')
+        self.__visualization_group_box.size_policy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.__visualization_layout = QGridLayout(self.__visualization_group_box)
         self._visualization_widget = QImageViewer(True)
-        visualization_layout.add_widget(self._visualization_widget)
+        self.__visualization_layout.add_widget(self.__visualization_widget)
         
-        centre_layout.add_widget(param_group_box )
-        centre_layout.add_widget(visualization_group_box)
+        self.__centre_layout.add_widget(self.__param_group_box )
+        self.__centre_layout.add_widget(self.__visualization_group_box)
         pass
     
     @Slot()
     def update_point_quantity(self):
-        self.__point_quantity = self._value_scroll_bar.value
+        self.__point_quantity = self.__value_scroll_bar.value
         self.__nuage_point.clear()
         self.populate_nuage()
         
